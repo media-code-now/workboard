@@ -2,6 +2,8 @@ export type Status = "todo" | "doing" | "review" | "done";
 export type Priority = "high" | "medium" | "low";
 export type Health = "on-track" | "at-risk" | "off-track" | "done";
 export type Color = "blue" | "indigo" | "purple" | "pink" | "red" | "orange" | "yellow" | "green" | "teal";
+export interface User { id: string; email: string; name: string; role: "admin" | "member" }
+
 export type View = "board" | "list" | "timeline";
 
 export interface Project {

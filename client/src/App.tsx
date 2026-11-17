@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
 import { useBoard } from "./useBoard";
-import { COLORS, STATUSES, type Project, type Status, type Task, type View } from "./types";
+import { COLORS, STATUSES, type Project, type Status, type Task, type User, type View } from "./types";
 import { Widgets } from "./components/Widgets";
 import { NO_PROJECT, ProjectRail } from "./components/ProjectRail";
 import { BoardView, ListView, TimelineView } from "./components/TaskViews";
 import { ProjectSheet, TaskSheet } from "./components/Sheets";
-import { Icon } from "./components/ui";
+import { Avatar, Icon } from "./components/ui";
 import { MenuSheet, TabBar, type MobileTab } from "./components/MobileNav";
 import { useMediaQuery } from "./useMediaQuery";
 import { today } from "./lib";
@@ -16,7 +16,7 @@ const readView = (): View => {
   return "board";
 };
 
-export default function App() {
+export default function App({ user, onSignOut }: { user: User; onSignOut: () => void }) {
   const board = useBoard();
   const { projects, tasks, loaded, loadError, connection } = board;
 
@@ -32,6 +32,15 @@ export default function App() {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [mobileTab, setMobileTab] = useState<MobileTab>("overview");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  useEffect(() => {
+    if (!accountOpen) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !(e.target as Element).closest(".account")) setAccountOpen(false);
+    };
+    document.addEventListener("click", close); document.addEventListener("keydown", close);
+    return () => { document.removeEventListener("click", close); document.removeEventListener("keydown", close); };
+  }, [accountOpen]);
   const goTab = (t: MobileTab) => { setMenuOpen(false); setMobileTab(t); window.scrollTo({ top: 0 }); };
   const shows = (t: MobileTab) => !isMobile || mobileTab === t;
   const newTask = () => { setMenuOpen(false); setTaskSheet({ open: true, task: null }); };
@@ -104,6 +113,16 @@ export default function App() {
             <button className="capsule tint" type="button" onClick={newTask} aria-label="New task">
               <Icon name="plus" width={2.2} /><span className="label-txt">New Task</span>
             </button>
+            <div className="account">
+              <button type="button" className="account-btn" aria-haspopup="menu" aria-expanded={accountOpen} aria-label={`Account: ${user.name}`}
+                onClick={() => setAccountOpen((o) => !o)}><Avatar name={user.name} /></button>
+              {accountOpen && (
+                <div className="account-pop glass" role="menu">
+                  <div className="who"><Avatar name={user.name} /><div><b>{user.name}</b><small>{user.email}</small></div></div>
+                  <button type="button" role="menuitem" className="signout" onClick={onSignOut}>Sign Out</button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -182,7 +201,8 @@ export default function App() {
       <MenuSheet open={menuOpen && isMobile} onClose={() => setMenuOpen(false)}
         view={view} onView={(v) => { setView(v); goTab("tasks"); }}
         people={people} assignee={assignee} onAssignee={setAssignee} prio={prio} onPrio={setPrio}
-        connection={connection} onNewTask={newTask} onNewProject={newProject} />
+        connection={connection} onNewTask={newTask} onNewProject={newProject}
+        user={user} onSignOut={() => { setMenuOpen(false); onSignOut(); }} />
 
       <datalist id="peopleList">{people.map((n) => <option key={n} value={n} />)}</datalist>
 

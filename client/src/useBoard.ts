@@ -38,7 +38,12 @@ export function useBoard() {
     const es = new EventSource("/api/events");
     // Reload on every (re)connect so nothing missed while offline is lost.
     es.onopen = () => { setConnection("live"); reload(); };
-    es.onerror = () => setConnection(es.readyState === EventSource.CLOSED ? "offline" : "connecting");
+    es.onerror = () => {
+      const closed = es.readyState === EventSource.CLOSED;
+      setConnection(closed ? "offline" : "connecting");
+      // A closed stream usually means the session expired; a board request confirms it and triggers sign-in.
+      if (closed) api.board().catch(() => {});
+    };
     es.onmessage = (msg) => {
       const ev = JSON.parse(msg.data) as ServerEvent;
       switch (ev.type) {

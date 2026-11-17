@@ -1,13 +1,19 @@
-import type { Project, ProjectInput, Task, TaskInput } from "./types";
+import type { Project, ProjectInput, Task, TaskInput, User } from "./types";
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  constructor(message: string, public status = 0) { super(message); }
+}
+
+/** Fired when the server says the session is gone, so the app can show the sign-in screen. */
+export const SIGNED_OUT_EVENT = "workboard:signed-out";
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
       method,
-      headers: body ? { "Content-Type": "application/json" } : undefined,
+      headers: { ...(body ? { "Content-Type": "application/json" } : {}), "X-Requested-With": "workboard" },
+      credentials: "same-origin",
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
@@ -15,11 +21,15 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(data.error || `The server returned an error (${res.status}).`);
+  if (res.status === 401 && !path.startsWith("/auth/")) window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
+  if (!res.ok) throw new ApiError(data.error || `The server returned an error (${res.status}).`, res.status);
   return data as T;
 }
 
 export const api = {
+  me: () => request<User>("GET", "/auth/me"),
+  login: (email: string, password: string) => request<User>("POST", "/auth/login", { email, password }),
+  logout: () => request<void>("POST", "/auth/logout", {}),
   board: () => request<{ projects: Project[]; tasks: Task[] }>("GET", "/board"),
   createProject: (p: ProjectInput) => request<Project>("POST", "/projects", p),
   updateProject: (id: string, p: Partial<ProjectInput>) => request<Project>("PATCH", `/projects/${id}`, p),

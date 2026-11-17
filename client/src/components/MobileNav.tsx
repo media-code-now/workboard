@@ -1,6 +1,6 @@
-import type { Priority, View } from "../types";
+import type { Priority, User, View } from "../types";
 import type { Connection } from "../useBoard";
-import { Icon, Sheet, type IconName } from "./ui";
+import { Avatar, Icon, Sheet, type IconName } from "./ui";
 
 export type MobileTab = "overview" | "projects" | "tasks";
 
@@ -43,16 +43,21 @@ const VIEWS: { id: View; label: string; icon: IconName }[] = [
   { id: "timeline", label: "Timeline", icon: "timeline" },
 ];
 
-export function MenuSheet({ open, onClose, view, onView, people, assignee, onAssignee, prio, onPrio, connection, onNewTask, onNewProject }: {
+export function MenuSheet({ open, onClose, view, onView, people, assignee, onAssignee, prio, onPrio, connection, onNewTask, onNewProject, user, onSignOut }: {
   open: boolean; onClose: () => void;
   view: View; onView: (v: View) => void;
   people: string[]; assignee: string; onAssignee: (v: string) => void;
   prio: string; onPrio: (v: Priority | "") => void;
   connection: Connection; onNewTask: () => void; onNewProject: () => void;
+  user: User; onSignOut: () => void;
 }) {
   const filtersOn = Boolean(assignee || prio);
   return (
     <Sheet open={open} onClose={onClose} title="Menu" canSave={false}>
+      <div className="form-group me-card">
+        <Avatar name={user.name} /><div className="me-txt"><b>{user.name}</b><small>{user.email}</small></div>
+      </div>
+
       <div className="menu-sec">
         <div className="menu-h">Create</div>
         <div className="form-group">
@@ -85,6 +90,10 @@ export function MenuSheet({ open, onClose, view, onView, people, assignee, onAss
               <option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
             </select></div>
         </div>
+      </div>
+
+      <div className="form-group">
+        <button type="button" className="mrow danger" onClick={onSignOut}>Sign Out</button>
       </div>
 
       <div className="menu-foot">

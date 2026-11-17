@@ -337,3 +337,35 @@ img { max-width: 100%; }
   .tab, .fab { transition: background .2s, color .2s, transform .15s; }
   .fab:active, .tab:active { transform: scale(.94); }
 }
+
+/* ---------- Sign in ---------- */
+.login-wrap { min-height: 100dvh; display: grid; place-items: center; padding-block: 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.login { width: min(420px, 100%); border-radius: 32px; padding: 32px 22px 24px; display: grid; gap: 16px; text-align: center; }
+.login h1 { font-size: 30px; font-weight: 800; letter-spacing: -.03em; }
+.login-mark { width: 64px; height: 64px; margin: 0 auto 4px; border-radius: 18px; background: linear-gradient(140deg, var(--blue), var(--indigo)); display: flex; gap: 5px; align-items: flex-start; justify-content: center; padding: 15px 12px; box-shadow: 0 10px 26px color-mix(in srgb, var(--blue) 35%, transparent); }
+.login-mark i { width: 9px; border-radius: 3px; background: #fff; }
+.login-mark i:nth-child(1) { height: 34px; } .login-mark i:nth-child(2) { height: 24px; } .login-mark i:nth-child(3) { height: 15px; opacity: .65; }
+.login-sub { margin: -6px 0 4px; color: var(--label-2); }
+.login-note { margin: 0; font-size: 14px; color: var(--label-2); background: var(--fill); border-radius: 12px; padding: 8px 12px; }
+.login .form-group { text-align: left; }
+.login .frow label { width: 84px; }
+.login .frow input { text-align: left; color: var(--label); }
+.login .err { text-align: left; }
+.login-btn { height: 50px; border-radius: 14px; border: 0; background: var(--blue); color: #fff; font-weight: 600; font-size: 17px; cursor: pointer; box-shadow: 0 8px 20px color-mix(in srgb, var(--blue) 30%, transparent); }
+.login-btn:disabled { opacity: .6; cursor: progress; }
+.login-help { margin: 0; font-size: 13px; color: var(--label-2); }
+
+/* ---------- Account ---------- */
+.account { position: relative; }
+.account-btn { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 50%; display: grid; }
+.account-btn .av { width: 38px; height: 38px; font-size: 13px; box-shadow: 0 0 0 2px var(--glass-edge); }
+.account-pop { position: absolute; right: 0; top: calc(100% + 8px); width: 260px; border-radius: 20px; padding: 8px; z-index: 20; background: var(--glass-strong); display: grid; gap: 4px; }
+.who { display: flex; gap: 10px; align-items: center; padding: 8px; min-width: 0; }
+.who div, .me-txt { display: grid; min-width: 0; }
+.who b, .me-txt b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who small, .me-txt small { color: var(--label-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.signout { border: 0; background: var(--fill); color: var(--red); font-weight: 600; padding: 11px; border-radius: 12px; cursor: pointer; font-size: 15px; }
+.me-card { display: flex; gap: 12px; align-items: center; padding: 12px 14px; }
+.me-card .av { width: 42px; height: 42px; font-size: 14px; }
+.mrow.danger { color: var(--red); justify-content: center; font-weight: 600; }
+@media (max-width: 640px) { .account { display: none; } }

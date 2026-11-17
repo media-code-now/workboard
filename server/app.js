@@ -1,25 +1,73 @@
 import express from "express";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { timingSafeEqual } from "node:crypto";
+import { SESSION_COOKIE, createLoginLimiter, parseCookies } from "./auth.js";
 import { ValidationError } from "./db.js";
 
-/** Optional shared login (HTTP Basic auth) when APP_USER and APP_PASSWORD are set. */
-function basicAuth(user, password) {
-  const expected = Buffer.from(`${user}:${password}`);
-  return (req, res, next) => {
-    const header = req.get("authorization") || "";
-    const given = header.startsWith("Basic ") ? Buffer.from(header.slice(6), "base64") : Buffer.alloc(0);
-    if (given.length === expected.length && timingSafeEqual(given, expected)) return next();
-    res.set("WWW-Authenticate", 'Basic realm="Workboard", charset="UTF-8"').status(401).send("Sign in required");
-  };
-}
-
-export function createApp(store, { staticDir, auth } = {}) {
+/**
+ * @param store  data store from openDb()
+ * @param auth   accounts from createAuth()
+ * @param opts.staticDir      built frontend to serve (production)
+ * @param opts.secureCookies  mark the session cookie Secure (set when served over HTTPS)
+ */
+export function createApp(store, auth, { staticDir, secureCookies = false } = {}) {
   const app = express();
   app.disable("x-powered-by");
+  app.use((_req, res, next) => {
+    res.set({ "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "same-origin" });
+    next();
+  });
   app.use(express.json({ limit: "100kb" }));
-  if (auth?.user && auth?.password) app.use(basicAuth(auth.user, auth.password));
+
+  // Changes must be JSON: browsers can't send that cross-site without CORS, which blocks CSRF.
+  app.use("/api", (req, res, next) => {
+    // DELETE has no body, so it carries a custom header instead (also impossible cross-site without CORS).
+    if (["POST", "PATCH", "PUT"].includes(req.method) && !req.is("application/json")) {
+      return res.status(415).json({ error: "Requests must be sent as JSON" });
+    }
+    if (req.method === "DELETE" && req.get("x-requested-with") !== "workboard") {
+      return res.status(403).json({ error: "Missing request header" });
+    }
+    next();
+  });
+
+  // ---- accounts ----
+  const limiter = createLoginLimiter();
+  const cookieOpts = { httpOnly: true, sameSite: "lax", secure: secureCookies, path: "/" };
+  const tokenOf = (req) => parseCookies(req.get("cookie"))[SESSION_COOKIE];
+
+  app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+  app.post("/api/auth/login", async (req, res) => {
+    const { email, password } = req.body ?? {};
+    const wait = limiter.blockedFor(req.ip, email);
+    if (wait) return res.status(429).set("Retry-After", String(wait)).json({ error: `Too many attempts. Try again in ${Math.ceil(wait / 60)} minutes.` });
+    const user = await auth.authenticate(email, password);
+    if (!user) {
+      limiter.fail(req.ip, email);
+      return res.status(401).json({ error: "That email and password don't match." });
+    }
+    limiter.reset(req.ip, email);
+    const { token, maxAgeMs } = auth.startSession(user.id);
+    res.cookie(SESSION_COOKIE, token, { ...cookieOpts, maxAge: maxAgeMs });
+    res.json(user);
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    auth.endSession(tokenOf(req));
+    res.clearCookie(SESSION_COOKIE, cookieOpts);
+    res.status(204).end();
+  });
+
+  // Everything below requires a signed-in user.
+  app.use("/api", (req, res, next) => {
+    const user = auth.userForToken(tokenOf(req));
+    if (!user) return res.status(401).json({ error: "Please sign in." });
+    req.user = user;
+    next();
+  });
+
+  app.get("/api/auth/me", (req, res) => res.json(req.user));
 
   // ---- live updates (Server-Sent Events) ----
   const clients = new Set();
@@ -35,8 +83,6 @@ export function createApp(store, { staticDir, auth } = {}) {
     const ping = setInterval(() => res.write(": ping\n\n"), 25000);
     req.on("close", () => { clearInterval(ping); clients.delete(res); });
   });
-
-  app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
   app.get("/api/board", (_req, res) => res.json({ projects: store.listProjects(), tasks: store.listTasks() }));
 
