@@ -7,9 +7,11 @@
 
 [functions]
   directory = "netlify/functions"
-  node_bundler = "esbuild"
-  # PGlite is only for local development; keep it out of the function bundle.
-  ignored_node_modules = ["@electric-sql/pglite"]
+  # Ship files and node_modules as-is (no bundling). Express and serverless-http are
+  # CommonJS and load Node built-ins with require(), which breaks inside an ES module bundle.
+  node_bundler = "nft"
+  # The function imports ../../server/*; make sure those files are included.
+  included_files = ["server/**"]
 
 # All API calls go to the function; same origin, so the session cookie just works.
 [[redirects]]

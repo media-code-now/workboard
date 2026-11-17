@@ -22,7 +22,12 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => ({}));
   if (res.status === 401 && !path.startsWith("/auth/")) window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
-  if (!res.ok) throw new ApiError(data.error || `The server returned an error (${res.status}).`, res.status);
+  if (!res.ok) {
+    const fallback = res.status >= 500
+      ? `The server had a problem (error ${res.status}). Try again in a moment; if it keeps happening, check the function logs in Netlify.`
+      : `The server returned an error (${res.status}).`;
+    throw new ApiError(data.error || fallback, res.status);
+  }
   return data as T;
 }
 
