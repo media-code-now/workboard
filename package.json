@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",
+    "@neon/config": "^1.14.2",
+    "@neon/env": "^2.1.5",
     "@netlify/neon": "^0.1.2",
     "express": "^5.1.0",
     "serverless-http": "^4.0.0"
