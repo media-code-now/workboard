@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { SESSION_COOKIE, generatePassword, parseCookies } from "./auth.js";
 import { ValidationError } from "./store.js";
+import { redactSecrets } from "./sql.js";
 
 /**
  * @param store  projects/tasks from createStore()
@@ -145,7 +146,7 @@ export function createApp(store, auth, { staticDir, secureCookies = false } = {}
   app.use((err, _req, res, _next) => {
     if (err instanceof ValidationError) return res.status(400).json({ error: err.message });
     if (err?.type === "entity.parse.failed") return res.status(400).json({ error: "Request body is not valid JSON" });
-    console.error(err);
+    console.error(redactSecrets(err?.stack || err));
     res.status(500).json({ error: "Something went wrong on the server" });
   });
 

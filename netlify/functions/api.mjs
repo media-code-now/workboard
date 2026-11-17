@@ -5,9 +5,14 @@
 // the result back to a Response. Everything is imported lazily inside try/catch,
 // so startup problems come back as readable JSON errors and show in the log.
 
-const BUILD = "2026-11-17.5"; // bump to confirm which version Netlify is serving
+const BUILD = "2026-11-17.6"; // bump to confirm which version Netlify is serving
 
 export const config = { path: "/api/*" };
+
+// Never show connection strings or passwords in responses or logs.
+const redact = (text) => String(text ?? "")
+  .replace(/postgres(?:ql)?:\/\/[^\s'"]+/gi, "postgresql://***")
+  .replace(/npg_[A-Za-z0-9]+/g, "***");
 
 let ready;
 let setupInfo = { status: "not started" };
@@ -28,7 +33,7 @@ function getHandler() {
   })();
   ready.catch((e) => {
     ready = undefined; // retry on the next request
-    setupInfo = { status: "failed", error: String(e?.message || e).slice(0, 300) };
+    setupInfo = { status: "failed", error: redact(e?.message || e).slice(0, 300) };
   });
   return ready;
 }
@@ -91,19 +96,20 @@ export default async (req, context) => {
   try {
     run = await getHandler();
   } catch (e) {
-    console.error("Workboard setup failed:", e);
+    const clean = redact(e?.message || e);
+    console.error("Workboard setup failed:", clean);
     const noDb = /No database configured/.test(e?.message);
     return json(503, {
       error: noDb
         ? "The database isn't set up yet. In Netlify, add DATABASE_URL (your Neon connection string) to the environment variables, then redeploy."
-        : `The server couldn't start: ${String(e?.message || e).slice(0, 200)}`,
+        : `The server couldn't start: ${clean.slice(0, 200)}`,
     });
   }
 
   try {
     return toResponse(await run(await toEvent(req, context), {}));
   } catch (e) {
-    console.error("Workboard request failed:", e);
+    console.error("Workboard request failed:", redact(e?.stack || e));
     return json(500, { error: "Something went wrong on the server." });
   }
 };
