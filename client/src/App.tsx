@@ -6,7 +6,8 @@ import { Widgets } from "./components/Widgets";
 import { NO_PROJECT, ProjectRail } from "./components/ProjectRail";
 import { BoardView, ListView, TimelineView } from "./components/TaskViews";
 import { ProjectSheet, TaskSheet } from "./components/Sheets";
-import { Avatar, Icon } from "./components/ui";
+import { Icon } from "./components/ui";
+import { AccountMenu, PasswordSheet, TeamSheet } from "./components/Account";
 import { MenuSheet, TabBar, type MobileTab } from "./components/MobileNav";
 import { useMediaQuery } from "./useMediaQuery";
 import { today } from "./lib";
@@ -32,15 +33,8 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [mobileTab, setMobileTab] = useState<MobileTab>("overview");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-  useEffect(() => {
-    if (!accountOpen) return;
-    const close = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof KeyboardEvent ? e.key === "Escape" : !(e.target as Element).closest(".account")) setAccountOpen(false);
-    };
-    document.addEventListener("click", close); document.addEventListener("keydown", close);
-    return () => { document.removeEventListener("click", close); document.removeEventListener("keydown", close); };
-  }, [accountOpen]);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [teamOpen, setTeamOpen] = useState(false);
   const goTab = (t: MobileTab) => { setMenuOpen(false); setMobileTab(t); window.scrollTo({ top: 0 }); };
   const shows = (t: MobileTab) => !isMobile || mobileTab === t;
   const newTask = () => { setMenuOpen(false); setTaskSheet({ open: true, task: null }); };
@@ -93,7 +87,7 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
   const filterNote = [assignee, prio && `${prio[0].toUpperCase() + prio.slice(1)} priority`].filter(Boolean).join(" · ");
   const empty = loaded && !loadError && !projects.length && !tasks.length;
   const offline = connection !== "live";
-  const syncLabel = connection === "live" ? "Live" : connection === "connecting" ? "Connecting" : "Offline";
+  const syncLabel = connection === "live" ? "Synced" : connection === "connecting" ? "Connecting" : "Offline";
   const selectedName = selected === NO_PROJECT ? "No project" : projectsById.get(selected)?.name ?? "";
 
   return (
@@ -113,16 +107,7 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
             <button className="capsule tint" type="button" onClick={newTask} aria-label="New task">
               <Icon name="plus" width={2.2} /><span className="label-txt">New Task</span>
             </button>
-            <div className="account">
-              <button type="button" className="account-btn" aria-haspopup="menu" aria-expanded={accountOpen} aria-label={`Account: ${user.name}`}
-                onClick={() => setAccountOpen((o) => !o)}><Avatar name={user.name} /></button>
-              {accountOpen && (
-                <div className="account-pop glass" role="menu">
-                  <div className="who"><Avatar name={user.name} /><div><b>{user.name}</b><small>{user.email}</small></div></div>
-                  <button type="button" role="menuitem" className="signout" onClick={onSignOut}>Sign Out</button>
-                </div>
-              )}
-            </div>
+            <AccountMenu user={user} onPassword={() => setPasswordOpen(true)} onTeam={() => setTeamOpen(true)} onSignOut={onSignOut} />
           </div>
         </header>
 
@@ -133,7 +118,7 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
           </div>
         )}
         {!loadError && offline && loaded && (
-          <div className="banner glass"><span className="dot" /><p>Live updates are paused. Reconnecting, and changes from others will appear once you're back online.</p></div>
+          <div className="banner glass"><span className="dot" /><p>Can't reach the server. Retrying, and changes from others will appear once you're back online.</p></div>
         )}
 
         {shows("overview") && <Widgets projects={projects} tasks={tasks} />}
@@ -202,7 +187,11 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
         view={view} onView={(v) => { setView(v); goTab("tasks"); }}
         people={people} assignee={assignee} onAssignee={setAssignee} prio={prio} onPrio={setPrio}
         connection={connection} onNewTask={newTask} onNewProject={newProject}
-        user={user} onSignOut={() => { setMenuOpen(false); onSignOut(); }} />
+        user={user} onSignOut={() => { setMenuOpen(false); onSignOut(); }}
+        onPassword={() => { setMenuOpen(false); setPasswordOpen(true); }}
+        onTeam={() => { setMenuOpen(false); setTeamOpen(true); }} />
+      <PasswordSheet open={passwordOpen} onClose={() => setPasswordOpen(false)} onDone={() => { setPasswordOpen(false); notify("Password changed"); }} />
+      {user.role === "admin" && <TeamSheet open={teamOpen} me={user} onClose={() => setTeamOpen(false)} />}
 
       <datalist id="peopleList">{people.map((n) => <option key={n} value={n} />)}</datalist>
 

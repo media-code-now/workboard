@@ -43,13 +43,13 @@ const VIEWS: { id: View; label: string; icon: IconName }[] = [
   { id: "timeline", label: "Timeline", icon: "timeline" },
 ];
 
-export function MenuSheet({ open, onClose, view, onView, people, assignee, onAssignee, prio, onPrio, connection, onNewTask, onNewProject, user, onSignOut }: {
+export function MenuSheet({ open, onClose, view, onView, people, assignee, onAssignee, prio, onPrio, connection, onNewTask, onNewProject, user, onSignOut, onPassword, onTeam }: {
   open: boolean; onClose: () => void;
   view: View; onView: (v: View) => void;
   people: string[]; assignee: string; onAssignee: (v: string) => void;
   prio: string; onPrio: (v: Priority | "") => void;
   connection: Connection; onNewTask: () => void; onNewProject: () => void;
-  user: User; onSignOut: () => void;
+  user: User; onSignOut: () => void; onPassword: () => void; onTeam: () => void;
 }) {
   const filtersOn = Boolean(assignee || prio);
   return (
@@ -93,12 +93,16 @@ export function MenuSheet({ open, onClose, view, onView, people, assignee, onAss
       </div>
 
       <div className="form-group">
+        {user.role === "admin" && <button type="button" className="mrow" onClick={onTeam}><span className="mico" style={{ background: "var(--green)" }}><Icon name="people" width={2} /></span>Team</button>}
+        <button type="button" className="mrow" onClick={onPassword}><span className="mico" style={{ background: "var(--label-3)" }}><Icon name="dots" width={2} /></span>Change Password</button>
+      </div>
+      <div className="form-group">
         <button type="button" className="mrow danger" onClick={onSignOut}>Sign Out</button>
       </div>
 
       <div className="menu-foot">
         <span className={"sync " + (connection === "live" ? "live" : "warn")}>
-          {connection === "live" ? "Live: changes sync automatically" : connection === "connecting" ? "Connecting…" : "Offline"}
+          {connection === "live" ? "Up to date: changes sync every few seconds" : connection === "connecting" ? "Connecting…" : "Offline"}
         </span>
       </div>
     </Sheet>

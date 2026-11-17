@@ -9,7 +9,7 @@ RUN npm run build
 # ---- runtime ----
 FROM node:22-alpine
 WORKDIR /app
-ENV NODE_ENV=production PORT=3001 DATABASE_FILE=/data/workboard.db
+ENV NODE_ENV=production PORT=3001 DATA_DIR=/data/pg
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY server ./server
@@ -17,4 +17,4 @@ COPY scripts ./scripts
 COPY --from=build /app/dist ./dist
 VOLUME /data
 EXPOSE 3001
-CMD ["node", "--disable-warning=ExperimentalWarning", "server/index.js"]
+CMD ["node", "server/index.js"]

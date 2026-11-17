@@ -369,3 +369,19 @@ img { max-width: 100%; }
 .me-card .av { width: 42px; height: 42px; font-size: 14px; }
 .mrow.danger { color: var(--red); justify-content: center; font-weight: 600; }
 @media (max-width: 640px) { .account { display: none; } }
+
+/* ---------- Team & password ---------- */
+.hint { margin: 0 6px; font-size: 13px; color: var(--label-2); }
+.pop-item { border: 0; background: transparent; text-align: left; padding: 11px 10px; border-radius: 12px; font-size: 15px; font-weight: 500; cursor: pointer; }
+.pop-item:hover { background: var(--fill); }
+.secret { display: grid; gap: 6px; padding: 14px; border-radius: var(--r-m); background: color-mix(in srgb, var(--green) 14%, transparent); }
+.secret span, .secret small { font-size: 13px; color: var(--label-2); }
+.secret-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.secret code { flex: 1 1 160px; font: 600 17px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--glass-strong); padding: 10px 12px; border-radius: 10px; user-select: all; overflow-wrap: anywhere; }
+.team-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; position: relative; flex-wrap: wrap; }
+.team-row + .team-row::before { content: ""; position: absolute; top: 0; left: 54px; right: 0; height: 1px; background: var(--sep); }
+.team-row .me-txt { flex: 1 1 140px; }
+.team-acts { display: flex; gap: 6px; margin-left: auto; }
+.mini { border: 0; background: var(--fill-2); border-radius: 99px; padding: 6px 11px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.mini.danger { color: var(--red); }
+.mini:disabled { opacity: .5; }

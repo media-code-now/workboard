@@ -8,10 +8,10 @@
 // When --password is left out, a strong random password is generated and printed once.
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
-import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
-import { openDb, ValidationError } from "../server/db.js";
-import { createAuth } from "../server/auth.js";
+import { init } from "../server/init.js";
+import { ValidationError } from "../server/store.js";
+import { generatePassword } from "../server/auth.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const { positionals, values } = parseArgs({
@@ -19,16 +19,16 @@ const { positionals, values } = parseArgs({
   options: { email: { type: "string" }, name: { type: "string" }, password: { type: "string" }, admin: { type: "boolean" } },
 });
 const [command] = positionals;
-const store = openDb(resolve(process.env.DATABASE_FILE || join(root, "data", "workboard.db")));
-const auth = createAuth(store.raw);
-const generated = () => randomBytes(12).toString("base64url");
+// Uses NETLIFY_DATABASE_URL when set (to manage the live Netlify database), else the local one.
+const { sql, auth } = await init({ dataDir: resolve(process.env.DATA_DIR || join(root, "data", "pg")) });
+const generated = generatePassword;
 
 function need(field) {
   if (!values[field]) { console.error(`Missing --${field}`); process.exit(1); }
   return values[field];
 }
-function findUser() {
-  const user = auth.getUserByEmail(need("email"));
+async function findUser() {
+  const user = await auth.getUserByEmail(need("email"));
   if (!user) { console.error(`No user with email ${values.email}`); process.exit(1); }
   return user;
 }
@@ -43,13 +43,13 @@ try {
       break;
     }
     case "list": {
-      const users = auth.listUsers();
+      const users = await auth.listUsers();
       if (!users.length) console.log("No users yet.");
       for (const u of users) console.log(`${u.role.padEnd(7)} ${u.email.padEnd(32)} ${u.name}`);
       break;
     }
     case "reset-password": {
-      const user = findUser();
+      const user = await findUser();
       const password = values.password ?? generated();
       await auth.setPassword(user.id, password);
       console.log(`Password reset for ${user.email}. They've been signed out everywhere.`);
@@ -57,8 +57,8 @@ try {
       break;
     }
     case "remove": {
-      const user = findUser();
-      auth.removeUser(user.id);
+      const user = await findUser();
+      await auth.removeUser(user.id);
       console.log(`Removed ${user.email}.`);
       break;
     }
@@ -69,5 +69,5 @@ try {
 } catch (e) {
   if (e instanceof ValidationError) { console.error(e.message); process.exitCode = 1; } else throw e;
 } finally {
-  store.close();
+  await sql.close();
 }
