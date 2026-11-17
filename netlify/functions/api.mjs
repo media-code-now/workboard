@@ -1,10 +1,13 @@
-// Netlify Function that serves the whole /api. netlify.toml routes /api/* here.
+// Netlify Function (v2, ES module) that serves the whole /api.
 //
-// Everything is imported lazily inside try/catch so that any startup problem
-// (missing module, database not configured, connection failure) comes back as a
-// readable JSON error and shows in the function log, instead of a bare 502.
+// v2 functions receive a web Request and return a Response. The Express app is
+// reached through serverless-http, so we convert Request -> Lambda-style event and
+// the result back to a Response. Everything is imported lazily inside try/catch,
+// so startup problems come back as readable JSON errors and show in the log.
 
-const BUILD = "2026-11-17.3"; // bump to confirm which version Netlify is serving
+const BUILD = "2026-11-17.4"; // bump to confirm which version Netlify is serving
+
+export const config = { path: "/api/*" };
 
 let ready;
 let setupInfo = { status: "not started" };
@@ -30,15 +33,47 @@ function getHandler() {
   return ready;
 }
 
-const json = (statusCode, body) => ({
-  statusCode,
-  headers: { "content-type": "application/json", "cache-control": "no-store" },
-  body: JSON.stringify(body),
-});
+const json = (status, body) =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
-export const handler = async (event, context) => {
-  context.callbackWaitsForEmptyEventLoop = false;
-  const path = String(event.path || "").replace(/^\/\.netlify\/functions\/api/, "/api");
+/** Web Request -> the API Gateway-style event serverless-http understands. */
+async function toEvent(req, context) {
+  const url = new URL(req.url);
+  const headers = Object.fromEntries(req.headers);
+  if (context?.ip && !headers["x-nf-client-connection-ip"]) headers["x-nf-client-connection-ip"] = context.ip;
+  const hasBody = !["GET", "HEAD"].includes(req.method);
+  const body = hasBody ? Buffer.from(await req.arrayBuffer()) : null;
+  const multi = {};
+  for (const [k, v] of url.searchParams) (multi[k] ??= []).push(v);
+  return {
+    httpMethod: req.method,
+    path: url.pathname,
+    headers,
+    multiValueHeaders: Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, [v]])),
+    queryStringParameters: Object.fromEntries(url.searchParams),
+    multiValueQueryStringParameters: multi,
+    body: body && body.length ? body.toString("base64") : null,
+    isBase64Encoded: Boolean(body && body.length),
+    requestContext: { identity: { sourceIp: context?.ip } },
+  };
+}
+
+/** serverless-http result -> web Response (keeps multiple Set-Cookie headers). */
+function toResponse(result) {
+  const headers = new Headers();
+  for (const [k, v] of Object.entries(result.headers ?? {})) if (v != null) headers.set(k, String(v));
+  for (const [k, list] of Object.entries(result.multiValueHeaders ?? {})) {
+    headers.delete(k);
+    for (const v of list ?? []) headers.append(k, String(v));
+  }
+  const status = result.statusCode ?? 200;
+  const noBody = status === 204 || status === 304;
+  const body = noBody || result.body == null ? null : result.isBase64Encoded ? Buffer.from(result.body, "base64") : result.body;
+  return new Response(body, { status, headers });
+}
+
+export default async (req, context) => {
+  const path = new URL(req.url).pathname;
 
   // Diagnostics that work even when the app itself can't start.
   if (path === "/api/health") {
@@ -66,7 +101,7 @@ export const handler = async (event, context) => {
   }
 
   try {
-    return await run(event, context);
+    return toResponse(await run(await toEvent(req, context), {}));
   } catch (e) {
     console.error("Workboard request failed:", e);
     return json(500, { error: "Something went wrong on the server." });

@@ -13,12 +13,8 @@
   # The function imports ../../server/*; make sure those files are included.
   included_files = ["server/**"]
 
-# All API calls go to the function; same origin, so the session cookie just works.
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-  force = true
+# /api/* is routed to the function by its own `config.path` (netlify/functions/api.mjs).
+# Functions with a path run before the redirect below. Same origin, so the session cookie just works.
 
 # Single-page app: every other path serves the app.
 [[redirects]]
