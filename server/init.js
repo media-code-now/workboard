@@ -1,16 +1,14 @@
-// Connects to the database, creates tables if needed, and returns the store + accounts.
+// Connects to the database, makes sure the schema exists, and returns the store + accounts.
 import { connect } from "./sql.js";
-import { SCHEMA, createStore } from "./store.js";
-import { AUTH_SCHEMA, createAuth } from "./auth.js";
+import { createStore } from "./store.js";
+import { createAuth } from "./auth.js";
+import { applySchema, schemaReady } from "./schema.js";
 
 export async function init({ dataDir } = {}) {
   const sql = await connect({ dataDir });
-  // One quick check instead of ~10 statements on every cold start: the last table
-  // created is login_failures, so if it exists the schema is in place.
-  const [{ ready } = {}] = await sql.query("SELECT to_regclass('public.login_failures') IS NOT NULL AS ready");
-  if (!ready) {
-    for (const stmt of [...SCHEMA, ...AUTH_SCHEMA]) await sql.query(stmt);
-  }
+  // Normally `npm run migrate` has already created the tables (over the direct
+  // connection). This one-query check is a safety net for fresh databases.
+  if (!(await schemaReady(sql))) await applySchema(sql);
   const store = createStore(sql);
   const auth = createAuth(sql);
   const admin = await auth.bootstrapAdmin();

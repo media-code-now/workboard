@@ -5,3 +5,6 @@ data/
 *.db-*
 .env
 .neon
+.env.local
+.env.local
+.env.*.local

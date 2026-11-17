@@ -8,23 +8,32 @@ A projects and tasks dashboard for the whole company. Everyone sees the same boa
 - **Phones**: floating tab bar (Overview, Projects, Tasks, Menu) and a + button
 - **Team**: admins add people, reset passwords and remove accounts from inside the app
 
-Built with React + TypeScript (Vite) and an Express API on Postgres. It runs on **Netlify** (static site + one Netlify Function + Netlify DB) or anywhere Node runs.
+Built with React + TypeScript (Vite) and an Express API on Postgres. The database is **Neon** (project `young-sun-92051793`, branch `production`, configured in `neon.ts`). The app runs on **Netlify** (static site + one Netlify Function) or anywhere Node runs.
+
+## Database (Neon)
+
+The Neon project is linked with `neon init` and described in `neon.ts`. To get its connection strings locally:
+
+```bash
+npm i -g neon@latest
+neon login
+neon deploy          # applies neon.ts and writes DATABASE_URL + DATABASE_URL_UNPOOLED to .env.local
+npm run migrate      # creates/updates tables over the direct (unpooled) connection
+```
+
+`.env.local` holds the database password and is git-ignored. The app uses Neon's serverless driver (`@neondatabase/serverless`) over HTTP with the **pooled** `DATABASE_URL`, which suits short-lived serverless functions. Schema changes use the **direct** `DATABASE_URL_UNPOOLED`.
 
 ## Deploy to Netlify
 
-1. In Netlify, choose **Add new project → Import an existing project → GitHub** and pick this repository. The settings come from `netlify.toml`, so keep the defaults and deploy.
-2. Add the database: in the project, open **Extensions** (or **Database**) and enable **Netlify DB**. It creates a Postgres database and sets `NETLIFY_DATABASE_URL` for you.
-3. Create the first admin: under **Project configuration → Environment variables**, add
-   - `INITIAL_ADMIN_EMAIL`: your email
-   - `INITIAL_ADMIN_PASSWORD`: a temporary password of 10+ characters
-   - `INITIAL_ADMIN_NAME`: your name (optional)
-4. **Deploys → Trigger deploy** so the new settings take effect, then open the site and sign in.
-5. Change your password (avatar → Change Password, or Menu → Change Password on a phone). You can then delete `INITIAL_ADMIN_PASSWORD`; it's only used while there are no users.
-6. Add your team from **Team** in the same menu. Each person gets a temporary password to send them privately.
+1. In Netlify, choose **Add new project → Import an existing project → GitHub** and pick this repository. The settings come from `netlify.toml`.
+2. Under **Project configuration → Environment variables**, add (mark them as secret):
+   - `DATABASE_URL`: the **pooled** Neon connection string (Neon Console → project → **Connect**, connection pooling on; or copy it from your `.env.local`)
+   - `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` (10+ characters), plus optionally `INITIAL_ADMIN_NAME`: creates the first admin when there are no users yet
+3. **Deploys → Trigger deploy**, then open `/api/health`. It should show `"ok":true` and `"databaseConfigured":true`.
+4. Sign in, change your password (avatar → Change Password), then delete `INITIAL_ADMIN_PASSWORD`.
+5. Add your team from **Team** in the same menu.
 
-Every push to `main` redeploys automatically. Tables are created on first use, so there's no migration step.
-
-> Netlify DB starts as a free claimable database; follow Netlify's prompt to claim it to your Neon account so it isn't removed.
+Every push to `main` redeploys automatically. `/api/health` reports the build, Node version and database status if anything goes wrong.
 
 ## Run it locally
 
@@ -39,7 +48,7 @@ npm run dev
 
 The `user add` command prints a temporary password. Open http://localhost:5173 and sign in.
 
-Locally the data lives in an embedded Postgres ([PGlite](https://pglite.dev)) under `data/pg`, so there's nothing to install. To work against a real Postgres (for example your Netlify DB), set `DATABASE_URL` or `NETLIFY_DATABASE_URL`.
+With a `.env.local` from `neon deploy` / `neon env pull`, the dev server, `seed` and `user` commands use your Neon database. Without one, data lives in an embedded Postgres ([PGlite](https://pglite.dev)) under `data/pg`, so there's nothing to install. For day-to-day development, consider a Neon branch (`neon checkout dev --create`) so you don't write to production.
 
 ## Other ways to host
 
@@ -74,7 +83,7 @@ Nothing in the app or its API is visible until someone signs in. There's no publ
 | `npm run user -- reset-password --email ...` | Sets a new password and signs that person out everywhere |
 | `npm run user -- remove --email ...` | Deletes the account and its sessions |
 
-The commands use the local database, or the live one when `NETLIFY_DATABASE_URL` is set (copy it from Netlify's environment variables).
+The commands use `DATABASE_URL` from `.env.local` (your Neon database) when present, otherwise the local embedded one.
 
 How it's protected:
 
@@ -91,8 +100,9 @@ When self-hosting, serve over HTTPS and set `SECURE_COOKIES=true`; behind a reve
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
-| `NETLIFY_DATABASE_URL` | Netlify (set by Netlify DB) | Postgres connection |
-| `DATABASE_URL` | anywhere | Any other Postgres connection |
+| `DATABASE_URL` | Netlify, `.env.local` | Pooled Neon connection string used by the app |
+| `DATABASE_URL_UNPOOLED` | `.env.local` | Direct Neon connection string used by `npm run migrate` |
+| `NETLIFY_DATABASE_URL` | Netlify DB (legacy) | Still accepted if `DATABASE_URL` isn't set |
 | `INITIAL_ADMIN_EMAIL`, `INITIAL_ADMIN_PASSWORD`, `INITIAL_ADMIN_NAME` | anywhere | Creates the first admin when there are no users yet |
 | `DATA_DIR` | local / Docker | Folder for the embedded database (default `./data/pg`) |
 | `PORT` | local / Docker | Server port (default `3001`) |
@@ -105,6 +115,7 @@ When self-hosting, serve over HTTPS and set `SECURE_COOKIES=true`; behind a reve
 | `npm run dev` | API and frontend with hot reload |
 | `npm run build` | Builds the frontend into `dist/` |
 | `npm start` | Production Node server |
+| `npm run migrate` | Creates/updates the schema over the direct Neon connection |
 | `npm run seed` | Adds example data (`-- --reset` clears the board first) |
 | `npm run user -- ...` | Manages accounts (see above) |
 | `npm test` | API tests (in-memory Postgres) |

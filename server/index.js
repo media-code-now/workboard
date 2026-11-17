@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { init } from "./init.js";
 import { createApp } from "./app.js";
+import { databaseUrl } from "./sql.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.PORT) || 3001;
@@ -16,7 +17,7 @@ const app = createApp(store, auth, {
 // Behind a reverse proxy (nginx, Caddy...), trust it for the client IP used in sign-in limits.
 if (process.env.TRUST_PROXY) app.set("trust proxy", process.env.TRUST_PROXY === "true" ? true : process.env.TRUST_PROXY);
 
-const where = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL ? "Netlify DB / Postgres" : DATA_DIR;
+const where = databaseUrl() ? `Neon Postgres at ${new URL(databaseUrl()).hostname}` : `embedded Postgres in ${DATA_DIR}`;
 const server = app.listen(PORT, async () => {
   console.log(`Workboard API listening on http://localhost:${PORT} (database: ${where})`);
   if ((await auth.userCount()) === 0) {

@@ -1,5 +1,5 @@
 // Fills the database with example projects and tasks for a demo.
-// Usage: npm run seed            (adds examples; uses NETLIFY_DATABASE_URL when set)
+// Usage: npm run seed            (adds examples; uses DATABASE_URL from .env.local when set)
 //        npm run seed -- --reset (clears everything first)
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";

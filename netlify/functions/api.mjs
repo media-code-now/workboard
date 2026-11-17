@@ -5,7 +5,7 @@
 // the result back to a Response. Everything is imported lazily inside try/catch,
 // so startup problems come back as readable JSON errors and show in the log.
 
-const BUILD = "2026-11-17.4"; // bump to confirm which version Netlify is serving
+const BUILD = "2026-11-17.5"; // bump to confirm which version Netlify is serving
 
 export const config = { path: "/api/*" };
 
@@ -95,7 +95,7 @@ export default async (req, context) => {
     const noDb = /No database configured/.test(e?.message);
     return json(503, {
       error: noDb
-        ? "The database isn't set up yet. In Netlify, enable Netlify DB for this site, then redeploy."
+        ? "The database isn't set up yet. In Netlify, add DATABASE_URL (your Neon connection string) to the environment variables, then redeploy."
         : `The server couldn't start: ${String(e?.message || e).slice(0, 200)}`,
     });
   }

@@ -19,7 +19,7 @@ const { positionals, values } = parseArgs({
   options: { email: { type: "string" }, name: { type: "string" }, password: { type: "string" }, admin: { type: "boolean" } },
 });
 const [command] = positionals;
-// Uses NETLIFY_DATABASE_URL when set (to manage the live Netlify database), else the local one.
+// Uses DATABASE_URL from .env.local (your Neon database) when set, else the local embedded one.
 const { sql, auth } = await init({ dataDir: resolve(process.env.DATA_DIR || join(root, "data", "pg")) });
 const generated = generatePassword;
 
