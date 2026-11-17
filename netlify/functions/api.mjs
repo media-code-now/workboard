@@ -5,7 +5,7 @@
 // the result back to a Response. Everything is imported lazily inside try/catch,
 // so startup problems come back as readable JSON errors and show in the log.
 
-const BUILD = "2026-11-17.6"; // bump to confirm which version Netlify is serving
+const BUILD = "2026-11-17.7"; // bump to confirm which version Netlify is serving
 
 export const config = { path: "/api/*" };
 
@@ -83,11 +83,16 @@ export default async (req, context) => {
   // Diagnostics that work even when the app itself can't start.
   if (path === "/api/health") {
     try { await getHandler(); } catch { /* reported below */ }
+    let database;
+    try { database = await (await import("../../server/sql.js")).describeDatabaseUrl(); }
+    catch (e) { database = { problem: redact(e?.message || e) }; }
     return json(setupInfo.status === "ok" ? 200 : 503, {
       ok: setupInfo.status === "ok",
       build: BUILD,
       node: process.version,
       databaseConfigured: Boolean(process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL),
+      // Until it works: shows which variable/host/user is used and a short hash of the password, never the password.
+      ...(setupInfo.status === "ok" ? {} : { database }),
       setup: setupInfo,
     });
   }

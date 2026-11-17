@@ -35,6 +35,24 @@ export function cleanDatabaseUrl(raw) {
   return v;
 }
 
+/** Safe-to-show facts about the configured connection (no password; only a short hash of it). */
+export async function describeDatabaseUrl(env = process.env) {
+  const source = env.DATABASE_URL ? "DATABASE_URL" : env.NETLIFY_DATABASE_URL ? "NETLIFY_DATABASE_URL" : null;
+  if (!source) return { source: null };
+  const alsoSet = source === "DATABASE_URL" && env.NETLIFY_DATABASE_URL ? ["NETLIFY_DATABASE_URL"] : [];
+  try {
+    const u = new URL(cleanDatabaseUrl(env[source]));
+    const { createHash } = await import("node:crypto");
+    const pw = decodeURIComponent(u.password);
+    return {
+      source, alsoSet, host: u.hostname, user: decodeURIComponent(u.username), database: u.pathname.slice(1),
+      passwordLength: pw.length, passwordFingerprint: createHash("sha256").update(pw).digest("hex").slice(0, 8),
+    };
+  } catch (e) {
+    return { source, alsoSet, problem: e.message };
+  }
+}
+
 export const databaseUrl = (env = process.env) => cleanDatabaseUrl(env.DATABASE_URL || env.NETLIFY_DATABASE_URL || "");
 
 /** @returns {Promise<Sql>} */
