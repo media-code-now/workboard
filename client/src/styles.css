@@ -437,3 +437,12 @@ a.capsule { text-decoration: none; color: inherit; }
 a.mrow { text-decoration: none; color: inherit; }
 .mrow-sub { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--label-2); }
 @media (max-width: 640px) { .nav .acts .leads-link { display: none; } }
+
+/* ---------- Brand (AI SEO Agents) ---------- */
+/* The mark is a one-color SVG used as a mask, so it takes the theme's text color in light and dark mode. */
+.brand-mark { display: inline-block; flex: none; background: var(--label); -webkit-mask: url(/brand/mark.svg) center / contain no-repeat; mask: url(/brand/mark.svg) center / contain no-repeat; }
+.brand-ttl { display: flex; align-items: center; gap: 14px; }
+.brand-ttl .brand-mark { width: 54px; height: 44px; }
+.login-brand { width: 84px; height: 68px; margin: 0 auto 2px; }
+.login-by { margin: -12px 0 0; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--label-2); }
+@media (max-width: 640px) { .brand-ttl { gap: 10px; } .brand-ttl .brand-mark { width: 40px; height: 32px; } }

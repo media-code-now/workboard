@@ -110,9 +110,12 @@ export default function App({ user, onSignOut, onUserChange }: { user: User; onS
       <div className="wall" aria-hidden="true"><i /><i /><i /></div>
       <div className="wrap">
         <header className="nav">
-          <div className="ttl">
+          <div className="ttl brand-ttl">
+            <span className="brand-mark" role="img" aria-label="AI SEO Agents" />
+            <div>
             <div className="eyebrow">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</div>
             <h1>Workboard</h1>
+            </div>
           </div>
           <div className="acts">
             <span className={"sync glass " + (connection === "live" ? "live" : "warn")} role="status">{syncLabel}</span>

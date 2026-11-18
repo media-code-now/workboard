@@ -22,8 +22,9 @@ export function Login({ onSignedIn, notice }: { onSignedIn: (u: User) => void; n
       <div className="wall" aria-hidden="true"><i /><i /><i /></div>
       <main className="login-wrap">
         <form className="login glass" onSubmit={submit} noValidate>
-          <div className="login-mark" aria-hidden="true"><i /><i /><i /></div>
+          <span className="brand-mark login-brand" role="img" aria-label="AI SEO Agents" />
           <h1>Workboard</h1>
+          <p className="login-by">AI SEO Agents</p>
           <p className="login-sub">Sign in to see your team's projects and tasks.</p>
           {notice && !error && <p className="login-note" role="status">{notice}</p>}
           <div className="form-group">

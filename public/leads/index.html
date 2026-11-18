@@ -1,5 +1,7 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Lead Desk · Workboard</title>
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
 <script src="/leads/shim.js"></script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
@@ -61,6 +63,7 @@ button{cursor:pointer}
 .top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:12px 0}
 .brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
 #to-workboard{text-decoration:none;color:inherit;white-space:nowrap}
+.brand-mark{align-self:center;flex:none;width:30px;height:24px;background:var(--ink);-webkit-mask:url(/brand/mark.svg) center/contain no-repeat;mask:url(/brand/mark.svg) center/contain no-repeat}
 .brand h1{font-size:22px}
 .brand span{color:var(--muted);font-size:13px}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:8px 14px;font-weight:500}
@@ -390,7 +393,7 @@ body::before{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdro
 <header class="top">
   <div class="wrap">
     <a class="btn small" href="/" id="to-workboard" aria-label="Back to Workboard">← Workboard</a>
-    <div class="brand"><h1>Lead Desk</h1><span id="hdr-sub">Capture → qualify → close</span></div>
+    <div class="brand"><span class="brand-mark" role="img" aria-label="AI SEO Agents"></span><h1>Lead Desk</h1><span id="hdr-sub">Capture → qualify → close</span></div>
     <button class="btn primary" id="btn-new" type="button">+ New lead</button>
   </div>
 </header>
