@@ -4,11 +4,12 @@
 import { SCHEMA } from "./store.js";
 import { AUTH_SCHEMA } from "./auth.js";
 import { NOTIFY_SCHEMA } from "./notifications.js";
+import { DOC_SCHEMA } from "./documents.js";
 
-export const SCHEMA_VERSION = 2; // 2: notifications + user preferences
+export const SCHEMA_VERSION = 3; // 2: notifications + user preferences; 3: documents (Leads)
 
 export async function applySchema(sql) {
-  for (const stmt of [...SCHEMA, ...AUTH_SCHEMA, ...NOTIFY_SCHEMA]) await sql.query(stmt);
+  for (const stmt of [...SCHEMA, ...AUTH_SCHEMA, ...NOTIFY_SCHEMA, ...DOC_SCHEMA]) await sql.query(stmt);
   await sql.query(
     "INSERT INTO meta (key, value) VALUES ('schema_version', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
     [SCHEMA_VERSION]);

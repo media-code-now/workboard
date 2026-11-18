@@ -21,6 +21,7 @@ const PATHS = {
   bell: <><path d="M4 11.5V7.5a4 4 0 0 1 8 0v4l1 1H3z" /><path d="M6.5 13.5a1.6 1.6 0 0 0 3 0" /></>,
   gear: <><circle cx="8" cy="8" r="2.2" /><path d="M8 1.8v1.6M8 12.6v1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M1.8 8h1.6M12.6 8h1.6M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1" /></>,
   arrow: <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />,
+  leads: <><circle cx="6" cy="5.5" r="2.3" /><path d="M2 13c.5-2.3 2-3.6 4-3.6s3.5 1.3 4 3.6" /><path d="M11 6.5h3.5M11 9h3.5M12.5 11.5h2" /></>,
 };
 export type IconName = keyof typeof PATHS;
 

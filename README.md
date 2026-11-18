@@ -9,6 +9,7 @@ A projects and tasks dashboard for the whole company. Everyone sees the same boa
 - **Team**: admins add people, reset passwords and remove accounts from inside the app
 - **Notifications**: a bell with unread count for tasks assigned to you, changes to your tasks, and due-date reminders (tomorrow, today, overdue), plus optional desktop alerts
 - **Settings**: your name, which notifications you get, desktop alerts, appearance (System / Light / Dark), password
+- **Leads** (Lead Desk, at `/leads/`): capture → qualify → close for agency leads, with Today, Pipeline, Proposals (from a service catalog, downloadable), Review and Settings (routing, catalog, agency details)
 
 Built with React + TypeScript (Vite) and an Express API on Postgres. The database is **Neon** (project `young-sun-92051793`, branch `production`, configured in `neon.ts`). The app runs on **Netlify** (static site + one Netlify Function) or anywhere Node runs.
 
@@ -123,6 +124,16 @@ When self-hosting, serve over HTTPS and set `SECURE_COOKIES=true`; behind a reve
 | `npm test` | API tests (in-memory Postgres) |
 | `npm run typecheck` | TypeScript checks |
 
+## Leads module (Lead Desk)
+
+Lead Desk lives in `public/leads/index.html` and is served as its own page at `/leads/`, behind the same sign-in. It was first built as a standalone page; `public/leads/shim.js` gives it the small storage API it was written for (`window.claude.use("db" | "user" | "downloads")`) on top of Workboard's server:
+
+- Data is stored in the `documents` table, in three collections: `leads`, `proposals` and `config` (routing, service catalog, agency details).
+- Changes sync between people through the same change counter the board uses (`/api/revision`).
+- Proposal downloads save an HTML file you can open and print to PDF.
+
+Apart from loading the adapter, a "← Workboard" link and two one-line fixes, the Lead Desk code is unchanged, so it can be updated by replacing that file.
+
 ## How notifications work
 
 People are matched to tasks by **name**: a task notifies the account whose name matches its assignee (ignoring case), and the assignee field suggests team members' names. Renaming yourself in Settings also renames you on existing tasks and projects.
@@ -152,6 +163,8 @@ All endpoints are JSON under `/api`. Everything except `/auth/login` and `/healt
 | POST | `/notifications/read` | Mark `{ ids: [...] }` or `{ all: true }` as read |
 | GET / PATCH | `/settings` | Your name and notification preferences |
 | GET | `/team` | Everyone's name (for assignee suggestions) |
+| GET | `/docs/:collection` | Leads module: list `leads`, `proposals` or `config` |
+| PUT / DELETE | `/docs/:collection/:id` | Leads module: save (whole record) / delete |
 | GET | `/board` | All projects and tasks |
 | POST | `/projects`, `/tasks` | Create |
 | PATCH / DELETE | `/projects/:id`, `/tasks/:id` | Update (partial) / delete; deleting a project keeps its tasks |
@@ -163,6 +176,7 @@ All endpoints are JSON under `/api`. Everything except `/auth/login` and `/healt
 
 ```
 client/src/           React app (components/, data hook, API client, styles)
+public/leads/         Leads module (Lead Desk page + storage adapter)
 server/               Express app, accounts, Postgres store, connection setup
 netlify/functions/    Netlify Function wrapping the Express app
 scripts/              Seed and account-management scripts

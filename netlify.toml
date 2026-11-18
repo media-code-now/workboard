@@ -16,6 +16,12 @@
 # /api/* is routed to the function by its own `config.path` (netlify/functions/api.mjs).
 # Functions with a path run before the redirect below. Same origin, so the session cookie just works.
 
+# The Leads module (Lead Desk) is its own page in public/leads/.
+[[redirects]]
+  from = "/leads"
+  to = "/leads/"
+  status = 301
+
 # Single-page app: every other path serves the app.
 [[redirects]]
   from = "/*"

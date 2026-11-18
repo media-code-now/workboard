@@ -5,6 +5,7 @@ import { SESSION_COOKIE, generatePassword, parseCookies } from "./auth.js";
 import { ValidationError } from "./store.js";
 import { redactSecrets } from "./sql.js";
 import { createNotifications } from "./notifications.js";
+import { createDocuments } from "./documents.js";
 
 /**
  * @param store  projects/tasks from createStore()
@@ -12,7 +13,7 @@ import { createNotifications } from "./notifications.js";
  * @param opts.staticDir      built frontend to serve (local production server only)
  * @param opts.secureCookies  mark the session cookie Secure (set when served over HTTPS)
  */
-export function createApp(store, auth, { staticDir, secureCookies = false, notifications = createNotifications(auth.sql) } = {}) {
+export function createApp(store, auth, { staticDir, secureCookies = false, notifications = createNotifications(auth.sql), documents = createDocuments(auth.sql) } = {}) {
   const app = express();
   app.disable("x-powered-by");
 
@@ -108,6 +109,16 @@ export function createApp(store, auth, { staticDir, secureCookies = false, notif
     res.json({ unread: await notifications.markRead(req.user.id, { ids, all: all === true }) });
   });
 
+  // ---- Leads module documents (leads, proposals, config) ----
+  app.get("/api/docs/:collection", async (req, res) => res.json(await documents.list(req.params.collection)));
+  app.put("/api/docs/:collection/:id", async (req, res) => {
+    await documents.set(req.params.collection, req.params.id, req.body);
+    res.status(204).end();
+  });
+  app.delete("/api/docs/:collection/:id", async (req, res) => {
+    return (await documents.remove(req.params.collection, req.params.id)) ? res.status(204).end() : res.status(404).json({ error: "Not found" });
+  });
+
   // ---- team (admins only) ----
   const adminOnly = (req, res, next) => (req.user.role === "admin" ? next() : res.status(403).json({ error: "Only admins can manage the team." }));
   app.get("/api/users", adminOnly, async (_req, res) => res.json(await auth.listUsers()));
@@ -182,6 +193,7 @@ export function createApp(store, auth, { staticDir, secureCookies = false, notif
 
   // ---- built frontend (local production server; Netlify serves dist/ itself) ----
   if (staticDir && existsSync(staticDir)) {
+    app.get(["/leads", "/leads/"], (_req, res) => res.sendFile(join(staticDir, "leads", "index.html")));
     app.use(express.static(staticDir, { index: false, maxAge: "1h" }));
     app.get("/{*path}", (_req, res) => res.sendFile(join(staticDir, "index.html")));
   }

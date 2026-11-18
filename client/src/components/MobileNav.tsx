@@ -67,6 +67,13 @@ export function MenuSheet({ open, onClose, view, onView, people, assignee, onAss
       </div>
 
       <div className="menu-sec">
+        <div className="menu-h">Workspace</div>
+        <div className="form-group">
+          <a className="mrow" href="/leads/"><span className="mico" style={{ background: "var(--teal)" }}><Icon name="leads" width={2} /></span>Leads<span className="mrow-sub">Lead Desk: pipeline, proposals</span></a>
+        </div>
+      </div>
+
+      <div className="menu-sec">
         <div className="menu-h">Show tasks as</div>
         <div className="view-pick">
           {VIEWS.map((v) => (

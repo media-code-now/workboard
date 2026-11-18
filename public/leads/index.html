@@ -1,0 +1,1524 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lead Desk · Workboard</title>
+<script src="/leads/shim.js"></script>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: sticky header with tabs; four views (Today, Pipeline, Review, Routing); lead editor slides in from the right, organized by the 10-step process. */
+/* Liquid Glass: frosted translucent surfaces over a soft colour wash; capsule controls; floating tab bar. */
+:root{
+  --bg:#edf2f8; --surface:rgba(255,255,255,.62); --sunk:rgba(255,255,255,.42); --ink:#0f141a; --muted:#566170; --line:rgba(20,32,56,.10);
+  --accent:#0a6cf0; --accent-ink:#ffffff; --accent-soft:rgba(10,108,240,.14);
+  --hot:#dc3f1a; --hot-soft:rgba(232,72,30,.14); --warm:#a86a00; --warm-soft:rgba(240,160,10,.18);
+  --nurture:#5149d1; --nurture-soft:rgba(88,80,220,.14); --dq:#66707c; --dq-soft:rgba(110,118,130,.14);
+  --good:#178a4a; --bad:#d0302a;
+  --glass:rgba(255,255,255,.56); --glass-strong:rgba(255,255,255,.78); --glass-solid:rgba(250,252,255,.97);
+  --field:rgba(255,255,255,.72); --pill:rgba(255,255,255,.92); --edge:rgba(255,255,255,.78); --hi:rgba(255,255,255,.85);
+  --shadow:0 10px 30px rgba(32,52,92,.10), 0 1px 2px rgba(32,52,92,.06);
+  --blur:blur(24px) saturate(180%);
+  --wash1:rgba(120,220,200,.55); --wash2:rgba(130,180,255,.55); --wash3:rgba(255,190,160,.50); --wash4:rgba(200,170,255,.45);
+  --f-display:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-body:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-mono:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0f17; --surface:rgba(30,37,48,.6); --sunk:rgba(255,255,255,.06); --ink:#eef2f7; --muted:#9ba6b5; --line:rgba(255,255,255,.10);
+  --accent:#4a94ff; --accent-ink:#ffffff; --accent-soft:rgba(74,148,255,.22);
+  --hot:#ff7d5c; --hot-soft:rgba(255,125,92,.18); --warm:#ffc24f; --warm-soft:rgba(255,194,79,.16);
+  --nurture:#9b97ff; --nurture-soft:rgba(155,151,255,.18); --dq:#9ca5b0; --dq-soft:rgba(156,165,176,.16);
+  --good:#4fd38c; --bad:#ff7b72;
+  --glass:rgba(32,39,51,.55); --glass-strong:rgba(28,34,45,.80); --glass-solid:rgba(22,27,36,.97);
+  --field:rgba(255,255,255,.07); --pill:rgba(255,255,255,.14); --edge:rgba(255,255,255,.13); --hi:rgba(255,255,255,.08);
+  --shadow:0 12px 36px rgba(0,0,0,.40), 0 1px 2px rgba(0,0,0,.3);
+  --wash1:rgba(20,120,120,.42); --wash2:rgba(40,70,170,.48); --wash3:rgba(120,50,90,.35); --wash4:rgba(80,50,160,.38);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0a0f17; --surface:rgba(30,37,48,.6); --sunk:rgba(255,255,255,.06); --ink:#eef2f7; --muted:#9ba6b5; --line:rgba(255,255,255,.10);
+  --accent:#4a94ff; --accent-ink:#ffffff; --accent-soft:rgba(74,148,255,.22);
+  --hot:#ff7d5c; --hot-soft:rgba(255,125,92,.18); --warm:#ffc24f; --warm-soft:rgba(255,194,79,.16);
+  --nurture:#9b97ff; --nurture-soft:rgba(155,151,255,.18); --dq:#9ca5b0; --dq-soft:rgba(156,165,176,.16);
+  --good:#4fd38c; --bad:#ff7b72;
+  --glass:rgba(32,39,51,.55); --glass-strong:rgba(28,34,45,.80); --glass-solid:rgba(22,27,36,.97);
+  --field:rgba(255,255,255,.07); --pill:rgba(255,255,255,.14); --edge:rgba(255,255,255,.13); --hi:rgba(255,255,255,.08);
+  --shadow:0 12px 36px rgba(0,0,0,.40), 0 1px 2px rgba(0,0,0,.3);
+  --wash1:rgba(20,120,120,.42); --wash2:rgba(40,70,170,.48); --wash3:rgba(120,50,90,.35); --wash4:rgba(80,50,160,.38);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:12px 0}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+#to-workboard{text-decoration:none;color:inherit;white-space:nowrap}
+.brand h1{font-size:22px}
+.brand span{color:var(--muted);font-size:13px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:8px 14px;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad)}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.tabs{display:flex;gap:4px;width:100%;overflow-x:auto;scrollbar-width:none}
+.tab{border:0;background:none;padding:10px 14px 11px;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab .count{font-family:var(--f-mono);font-size:12px;margin-left:6px;color:var(--muted)}
+
+.banner{background:var(--warm-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warm) 35%,transparent);border-radius:var(--r);padding:10px 14px;margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner b{color:var(--warm)}
+main{padding-block:20px 60px}
+.view{display:grid;gap:22px}
+.eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.kpi{background:var(--surface);padding:14px 16px;display:grid;gap:4px}
+.kpi .v{font-family:var(--f-display);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .v.alert{color:var(--hot)}
+.kpi .l{color:var(--muted);font-size:12.5px}
+
+/* lists on Today */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:22px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.panel-h{display:flex;align-items:baseline;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.panel-h h2{font-size:16px;white-space:nowrap}
+.panel-h .rule{color:var(--muted);font-size:12.5px;margin-left:auto;text-align:right}
+.items{list-style:none;margin:0;padding:0}
+.item{display:grid;grid-template-columns:4px 1fr auto;gap:12px;align-items:center;padding:10px 16px 10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.item:last-child{border-bottom:0}
+.item:hover{background:var(--sunk)}
+.item .stripe{align-self:stretch;border-radius:0 3px 3px 0}
+.item .who{min-width:0}
+.item .who b{font-weight:600}
+.item .who .sub{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .when{text-align:right;font-size:12.5px}
+.empty{padding:18px 16px;color:var(--muted)}
+.late{color:var(--hot);font-weight:600}
+
+/* tag pills */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.t-Hot{color:var(--hot);background:var(--hot-soft)}
+.t-Warm{color:var(--warm);background:var(--warm-soft)}
+.t-Nurture{color:var(--nurture);background:var(--nurture-soft)}
+.t-Disqualify{color:var(--dq);background:var(--dq-soft)}
+.t-Unqualified{color:var(--muted);background:transparent;border:1px dashed var(--line)}
+.s-Hot{background:var(--hot)}.s-Warm{background:var(--warm)}.s-Nurture{background:var(--nurture)}.s-Disqualify{background:var(--dq)}.s-Unqualified{background:var(--line)}
+.stage{font-size:12.5px;padding:2px 8px;border-radius:4px;background:var(--sunk);white-space:nowrap}
+.stage.Won{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.stage.Lost,.stage.Disqualified{color:var(--muted)}
+
+/* pipeline */
+.stages{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.chip .n{font-family:var(--f-mono);color:var(--muted);font-size:12px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip[aria-pressed="true"] .n{color:inherit;opacity:.75}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters input,.filters select{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:7px 10px;min-width:0}
+.filters input[type=search]{flex:1 1 220px}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:1000px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--sunk);white-space:nowrap;cursor:pointer;user-select:none}
+th[data-sort]:hover{color:var(--ink)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--sunk)}
+tbody tr:last-child td{border-bottom:0}
+td .sub{color:var(--muted);font-size:12.5px;max-width:280px}
+td.num,th.num{text-align:right}
+
+/* review */
+.period{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.period select{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:7px 10px}
+.funnel{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.funnel .step{background:var(--surface);padding:16px;display:grid;gap:4px;position:relative}
+.funnel .step .v{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1.1}
+.funnel .step .rate{font-family:var(--f-mono);font-size:12.5px;color:var(--accent)}
+.bars{display:grid;gap:8px;padding:14px 16px}
+.bar-row{display:grid;grid-template-columns:minmax(90px,170px) 1fr auto;gap:12px;align-items:center}
+.bar-row .lbl{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:16px;background:var(--sunk);border-radius:3px;position:relative;overflow:hidden}
+.track .b-all{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--accent) 28%,transparent);border-radius:3px}
+.track .b-prop{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--accent) 55%,transparent);border-radius:3px}
+.track .b-won{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px}
+.bar-row .nums{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);white-space:nowrap;min-width:92px;text-align:right}
+.bar-row .nums b{color:var(--ink);font-weight:500}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:0 16px 12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.insight{padding:12px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.insight b{color:var(--ink)}
+
+/* routing */
+.routing td input{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 9px;width:100%;min-width:140px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:16px}
+.rule-card{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:6px;align-content:start}
+.rule-card p{margin:0;color:var(--muted);font-size:13px}
+
+/* drawer */
+.backdrop{position:fixed;inset:0;background:rgb(10 16 14 / .45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;border-left:1px solid var(--line);box-shadow:-12px 0 40px rgb(0 0 0 / .18)}
+.d-head{background:var(--surface);border-bottom:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 14px 18px;display:grid;gap:10px}
+.d-head .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.d-head h2{font-size:20px;margin-right:auto;min-width:0;overflow-wrap:anywhere}
+.d-body{flex:1;overflow-y:auto;padding:14px max(18px,env(safe-area-inset-right,0px)) 30px 18px;display:grid;gap:10px;align-content:start}
+.d-foot{background:var(--surface);border-top:1px solid var(--line);padding:12px max(18px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.d-foot .msg{margin-right:auto;font-size:13px;color:var(--bad)}
+.d-foot .msg.ok{color:var(--good)}
+details.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+details.step>summary{list-style:none;cursor:pointer;padding:11px 14px;display:flex;gap:10px;align-items:baseline}
+details.step>summary::-webkit-details-marker{display:none}
+details.step>summary .no{font-family:var(--f-mono);font-size:12px;color:var(--muted);width:20px}
+details.step>summary h3{font-size:15px}
+details.step>summary .hint{margin-left:auto;font-size:12px;color:var(--muted);text-align:right}
+details.step>summary::after{content:"+";font-family:var(--f-mono);color:var(--muted);margin-left:8px}
+details.step[open]>summary::after{content:"−"}
+details.step[open]>summary .hint{display:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 14px 16px}
+.grid .full{grid-column:1/-1}
+.field{display:grid;gap:4px;min-width:0}
+.field label,.field .lab{font-size:12px;color:var(--muted);font-weight:500}
+.field label .req{color:var(--hot)}
+.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 9px;width:100%;min-width:0}
+.field textarea{min-height:64px;resize:vertical}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 14px}
+.checks label{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--ink)}
+.checks input{accent-color:var(--accent);width:16px;height:16px}
+.tagbox{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:var(--sunk);border-radius:6px;font-size:13px}
+.tagbox .why{color:var(--muted)}
+.fu{display:grid;gap:6px}
+.fu label{display:flex;gap:10px;align-items:center;font-size:13.5px;color:var(--ink)}
+.field .fu input,.field .checks input{width:16px;height:16px;flex:none;accent-color:var(--accent);padding:0}
+.fu label .d{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.fu label .d.late{color:var(--hot)}
+.statusline{font-size:12.5px;color:var(--muted)}
+
+/* proposals */
+.pst{display:inline-flex;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em}
+.ps-Draft{color:var(--muted);border:1px dashed var(--line)}
+.ps-Sent{color:var(--nurture);background:var(--nurture-soft)}
+.ps-Accepted{color:var(--accent);background:var(--accent-soft)}
+.ps-Declined{color:var(--dq);background:var(--dq-soft)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar select{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:7px 10px;min-width:0;max-width:100%}
+.note{font-size:13px;color:var(--muted)}
+.note b{color:var(--warm)}
+.pe-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pe-bar h2{font-size:20px;margin-right:auto;min-width:0;overflow-wrap:anywhere}
+.pe-msg{font-size:13px;color:var(--bad);min-height:1.2em}
+.pe-msg.ok{color:var(--good)}
+.pe{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:22px;align-items:start}
+.pe-form{display:grid;gap:14px;min-width:0}
+.pe-form .grid{padding-top:12px}
+.lis{display:grid;gap:10px;padding:12px 16px}
+.li{border:1px solid var(--line);border-radius:var(--r);background:var(--bg);display:grid;gap:10px;padding:12px}
+.li-h{display:flex;gap:6px;align-items:end}
+.li-h .field{flex:1}
+.li-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:6px;min-width:32px;height:32px;line-height:1;font-size:14px;color:var(--muted)}
+.iconbtn:hover{color:var(--ink);border-color:var(--muted)}
+.sugs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:0 16px 12px}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 14px}
+.addrow select{flex:1 1 220px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:7px 10px;min-width:0}
+.totals{display:grid;gap:5px;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px;padding:12px 16px 16px}
+.totals div{display:flex;justify-content:space-between;gap:12px}
+.totals .big{font-size:16px;font-weight:600;border-top:1px solid var(--line);padding-top:8px;margin-top:3px}
+.pe-preview{position:sticky;top:calc(env(safe-area-inset-top,0px) + 112px);max-height:calc(100vh - 132px);overflow:auto;background:var(--sunk);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
+.pe-preview .pdoc{margin:10px auto 0;padding:32px 34px}
+.plist{display:grid;gap:6px}
+.plink{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 10px;display:flex;gap:10px;align-items:center;width:100%;text-align:left}
+.plink:hover{border-color:var(--muted)}
+.plink .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.catwrap{display:grid;gap:8px;padding:14px 16px}
+.cat-item{display:grid;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:1000px){.pe{grid-template-columns:1fr}.pe-preview{position:static;max-height:none}}
+
+/* client document (also used in the downloaded file) */
+.pdoc{--pi:#18211d;--pm:#5b6762;--pl:#dde3df;--pa:#1d6b58;background:#fff;color:var(--pi);max-width:820px;margin:24px auto;padding:48px 52px;font-family:"Instrument Sans",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;box-shadow:0 1px 3px rgb(0 0 0 / .12);border-radius:4px;color-scheme:light}
+.pdoc h1{font-size:28px;margin:22px 0 4px;letter-spacing:-.02em;line-height:1.15;font-family:inherit;color:var(--pi)}
+.pdoc h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--pa);margin:30px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--pl);font-family:inherit}
+.pdoc h3{font-family:inherit;color:var(--pi)}
+.pdoc .pd-top{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start;padding-bottom:20px;border-bottom:3px solid var(--pa)}
+.pdoc .pd-agency{font-weight:700;font-size:17px}
+.pdoc .pd-meta{font-size:12.5px;color:var(--pm);text-align:right;line-height:1.7}
+.pdoc .pd-meta b{color:var(--pi);font-weight:600}
+.pdoc .pd-for{margin-top:18px;display:flex;gap:48px;flex-wrap:wrap}
+.pdoc .pd-k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--pm)}
+.pdoc p{margin:0 0 10px;white-space:pre-wrap}
+.pdoc .pd-item{padding:12px 0;border-bottom:1px solid var(--pl)}
+.pdoc .pd-item:last-of-type{border-bottom:0}
+.pdoc .pd-item h3{font-size:16px;margin:0 0 4px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pdoc .pd-item h3 span{font-weight:500;font-size:12.5px;color:var(--pm)}
+.pdoc ul,.pdoc ol{margin:6px 0 0;padding-left:20px}
+.pdoc li{margin:3px 0}
+.pdoc .pd-tbl{overflow-x:auto}
+.pdoc table{width:100%;min-width:480px;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.pdoc th,.pdoc td{padding:8px 6px;border-bottom:1px solid var(--pl);text-align:left;font-size:13px;background:none;color:inherit;text-transform:none;letter-spacing:0;cursor:default;font-weight:400;vertical-align:top;white-space:normal}
+.pdoc th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--pm);font-weight:600}
+.pdoc tbody tr{cursor:default}
+.pdoc tbody tr:hover{background:none}
+.pdoc .r{text-align:right;white-space:nowrap}
+.pdoc tfoot td{border-bottom:0}
+.pdoc .pd-total td{font-size:16px;font-weight:700;border-top:2px solid var(--pi)}
+.pdoc .pd-sign{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:36px}
+.pdoc .pd-sign div{border-top:1px solid var(--pi);padding-top:6px;font-size:12px;color:var(--pm)}
+.pdoc .pd-foot{margin-top:32px;font-size:12px;color:var(--pm);border-top:1px solid var(--pl);padding-top:12px}
+@media (max-width:600px){.pdoc{padding:26px 20px!important}.pdoc .pd-meta{text-align:left}}
+@media (max-width:640px){
+  .grid{grid-template-columns:1fr}
+  .brand span{display:none}
+  .bar-row{grid-template-columns:96px 1fr auto}
+  .li-grid,.grid4{grid-template-columns:1fr 1fr}
+  .grid2{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .drawer{animation:slide .18s ease-out}
+  @keyframes slide{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}
+}
+
+/* ===================== Liquid Glass layer ===================== */
+html{background:var(--bg)}
+body{min-height:100vh;background:
+  radial-gradient(42% 48% at 8% 6%, var(--wash1), transparent 72%),
+  radial-gradient(46% 52% at 94% 12%, var(--wash2), transparent 72%),
+  radial-gradient(52% 50% at 82% 92%, var(--wash3), transparent 72%),
+  radial-gradient(46% 50% at 12% 88%, var(--wash4), transparent 72%),
+  var(--bg);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased}
+h1,h2,h3{letter-spacing:-.015em}
+main{padding-block:20px calc(120px + env(safe-area-inset-bottom,0px))}
+
+/* glass surfaces */
+.panel,.kpi,.funnel .step,.tbl-wrap,details.step,.banner,.rule-card,.pe-preview{
+  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  border:1px solid var(--edge);box-shadow:var(--shadow), inset 0 1px 0 var(--hi);border-radius:20px}
+.kpis,.funnel{background:none;border:0;border-radius:0;overflow:visible;gap:12px}
+.kpi,.funnel .step{border-radius:18px;padding:16px 18px}
+.kpi .v,.funnel .step .v{font-weight:700;letter-spacing:-.02em}
+.panel{overflow:hidden}
+.panel .tbl-wrap,.panel details.step,.drawer details.step,.li,.rule-card,.catwrap details.step{
+  background:var(--sunk);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;border-radius:16px}
+.panel .tbl-wrap{background:transparent;border-radius:0}
+.li{border:1px solid var(--line)}
+.banner{background:linear-gradient(var(--warm-soft),var(--warm-soft)),var(--glass);border-color:var(--edge)}
+.panel-h,th,td,.item,.insight,.cat-item{border-color:var(--line)}
+th{background:transparent;color:var(--muted)}
+tbody tr:hover,.item:hover{background:var(--sunk)}
+.item .stripe{border-radius:0 4px 4px 0}
+.track{background:var(--line);border-radius:999px}
+.track .b-all,.track .b-prop,.track .b-won{border-radius:999px}
+.pe-preview{padding:16px}
+
+/* capsule controls */
+.btn{border-radius:999px;padding:8px 16px;background:var(--glass);border:1px solid var(--edge);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:0 1px 3px rgba(0,0,0,.06), inset 0 1px 0 var(--hi);transition:transform .12s ease, filter .12s ease}
+.btn:hover{border-color:var(--edge);filter:brightness(1.04)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 78%,#fff) 0%, var(--accent) 60%);color:var(--accent-ink);border-color:transparent;box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 32%,transparent), inset 0 1px 0 rgba(255,255,255,.4)}
+.btn.small{padding:5px 12px}
+.btn.danger{color:var(--bad)}
+.chip{border-radius:999px;background:var(--glass);border:1px solid var(--edge);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);padding:6px 13px;box-shadow:inset 0 1px 0 var(--hi)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 30%,transparent)}
+.iconbtn{border-radius:50%;width:32px;min-width:32px;background:var(--glass);border:1px solid var(--edge)}
+.filters input,.filters select,.toolbar select,.period select,.addrow select{border-radius:999px;padding:8px 14px;background:var(--glass);border:1px solid var(--edge);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.field input,.field select,.field textarea,.routing td input{border-radius:12px;background:var(--field);border:1px solid var(--line);padding:8px 11px}
+.field input:focus,.field select:focus,.field textarea:focus,.routing td input:focus,.filters input:focus,.filters select:focus,.toolbar select:focus,.period select:focus,.addrow select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.stage{border-radius:999px;background:var(--sunk);padding:2px 10px}
+.tagbox{border-radius:14px;background:var(--sunk)}
+.plink{border-radius:12px;background:var(--field);border-color:var(--line)}
+.plist>*{min-width:0}
+
+/* header */
+.top{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--edge);box-shadow:0 1px 0 var(--line)}
+.top .wrap{padding-block:10px}
+.brand h1{font-size:22px;font-weight:700}
+body::before{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+
+/* floating tab bar */
+.tabbar{position:fixed;z-index:25;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  display:flex;gap:2px;padding:6px;border-radius:999px;background:var(--glass-strong);
+  -webkit-backdrop-filter:blur(30px) saturate(200%);backdrop-filter:blur(30px) saturate(200%);
+  border:1px solid var(--edge);box-shadow:0 14px 40px rgba(20,30,60,.20), inset 0 1px 0 var(--hi)}
+.tabbar .tab{position:relative;display:grid;justify-items:center;gap:2px;min-width:78px;padding:7px 14px 6px;border:0;border-radius:999px;background:none;color:var(--muted);font-size:11px;font-weight:600;white-space:nowrap;transition:background .15s ease,color .15s ease}
+.tabbar .tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar .tab:hover{color:var(--ink)}
+.tabbar .tab[aria-selected="true"]{color:var(--accent);background:var(--pill);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.tabbar .count{position:absolute;top:1px;right:calc(50% - 22px);margin:0;min-width:17px;height:17px;padding:0 5px;border-radius:999px;font-size:10px;line-height:17px;text-align:center;font-family:var(--f-body);font-weight:700;background:var(--muted);color:var(--bg)}
+.tabbar #c-today{background:var(--hot);color:#fff}
+.tabbar .count:empty{display:none}
+.pe-preview{top:calc(env(safe-area-inset-top,0px) + 80px);max-height:calc(100vh - 200px)}
+
+/* sheet */
+.backdrop{background:rgba(10,16,28,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.drawer{background:var(--glass-strong);-webkit-backdrop-filter:blur(40px) saturate(180%);backdrop-filter:blur(40px) saturate(180%);border-left:1px solid var(--edge);border-radius:24px 0 0 24px;overflow:hidden;box-shadow:-20px 0 60px rgba(10,20,40,.22)}
+.d-head,.d-foot{background:transparent;border-color:var(--line)}
+
+@media (max-width:640px){
+  .tabbar{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));transform:none;justify-content:space-between}
+  .tabbar .tab{flex:1;min-width:0;padding:6px 2px 5px;font-size:10px}
+  .tabbar .tab svg{width:21px;height:21px}
+  .drawer{top:auto;height:calc(100% - 28px - env(safe-area-inset-top,0px));width:100%;border-left:0;border-top:1px solid var(--edge);border-radius:24px 24px 0 0}
+  .d-head{padding-top:16px}
+  .d-foot .msg{flex-basis:100%}
+}
+@media (max-width:640px) and (prefers-reduced-motion:no-preference){
+  .drawer{animation:sheetUp .22s cubic-bezier(.2,.8,.2,1)}
+  @keyframes sheetUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+}
+
+/* readable fallbacks when blur is unavailable or reduced transparency is requested */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root:root:root{--glass:var(--glass-solid);--glass-strong:var(--glass-solid)}
+}
+@media (prefers-reduced-transparency:reduce){
+  :root:root:root{--glass:var(--glass-solid);--glass-strong:var(--glass-solid);--surface:var(--glass-solid)}
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="btn small" href="/" id="to-workboard" aria-label="Back to Workboard">← Workboard</a>
+    <div class="brand"><h1>Lead Desk</h1><span id="hdr-sub">Capture → qualify → close</span></div>
+    <button class="btn primary" id="btn-new" type="button">+ New lead</button>
+  </div>
+</header>
+<nav class="tabbar" role="tablist" aria-label="Sections">
+  <button class="tab" role="tab" data-view="today" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg><span class="lbl">Today</span><span class="count" id="c-today"></span></button>
+  <button class="tab" role="tab" data-view="pipeline" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h11M4 18h7"/></svg><span class="lbl">Pipeline</span><span class="count" id="c-pipe"></span></button>
+  <button class="tab" role="tab" data-view="proposals" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg><span class="lbl">Proposals</span><span class="count" id="c-props"></span></button>
+  <button class="tab" role="tab" data-view="review" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg><span class="lbl">Review</span></button>
+  <button class="tab" role="tab" data-view="routing" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg><span class="lbl">Settings</span></button>
+</nav>
+
+<div class="wrap">
+  <div class="banner" id="banner" hidden></div>
+  <main>
+    <section class="view" id="view-today"></section>
+    <section class="view" id="view-pipeline" hidden></section>
+    <section class="view" id="view-proposals" hidden></section>
+    <section class="view" id="view-review" hidden></section>
+    <section class="view" id="view-routing" hidden></section>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Lead details"></aside>
+
+<datalist id="dl-industry"></datalist>
+<datalist id="dl-owner"></datalist>
+<datalist id="dl-sub"></datalist>
+
+<script>
+(() => {
+/* ---------- reference lists ---------- */
+const SOURCES = ["Website form","Phone call","Google Maps / GBP","Referral","Social DM","AI assistant mention","Other"];
+const CATEGORIES = ["SEO","Google Business Profile","Web","Shopify","Paid Media","Not sure / audit"];
+const SUBS = {
+  "SEO":["Local SEO","Technical SEO","On-page & content","Link building","E-commerce SEO","AI search visibility"],
+  "Google Business Profile":["GBP optimization","GBP suspension","Reviews management","Multi-location GBP","Map pack ranking"],
+  "Web":["New website","Website redesign","Landing pages","Speed / Core Web Vitals","Maintenance"],
+  "Shopify":["New store build","Shopify migration","Theme customization","Conversion optimization","Apps & integrations"],
+  "Paid Media":["Google Ads","Local Services Ads","Meta Ads","Shopping / PMax","Ads audit"],
+  "Not sure / audit":["Full marketing audit","SEO audit","Free consult"]
+};
+const INDUSTRIES = ["Med spa","Home services","E-commerce","Dental","Legal","Healthcare","Real estate","Restaurants","Auto","Professional services","Other"];
+const BUDGETS = ["Under $1k","$1–2.5k","$2.5–5k","$5–10k","$10k+"];
+const TIMELINES = ["ASAP","Within 30 days","1–3 months","Just researching"];
+const STAGES = ["New","Contacted","Discovery booked","Discovery done","Proposal sent","Won","Lost","Nurture","Disqualified"];
+const OPEN = ["New","Contacted","Discovery booked","Discovery done","Proposal sent"];
+const TAGS = ["Hot","Warm","Nurture","Disqualify"];
+const LOST = ["Price","Timing","Went with a competitor","No response","Other"];
+const CONTACT = ["Call","Text","Email"];
+const ONBOARD = [["ob_web","Website access"],["ob_gbp","Google listing access"],["ob_ga","Analytics / Search Console"],["ob_ads","Ads accounts"],["ob_shop","Shopify access"],["ob_kick","Kickoff call"],["ob_base","Baseline report"],["ob_plan","30/60/90-day plan"]];
+const PREP = [["pr_site","Reviewed their website"],["pr_gbp","Reviewed Google listing"],["pr_ads","Reviewed their ads"],["pr_data","Pulled data (Semrush, Maps visibility)"]];
+
+/* ---------- service catalog defaults (placeholder rates until saved in Settings) ---------- */
+// [sub-service, price, billing, min term (months), timeline, summary, deliverables separated by |]
+const CATALOG_ROWS = [
+  ["Local SEO",1500,"monthly",6,"Ongoing; map pack gains usually show in 3–6 months","Grow your visibility in Google Maps and local search results for the services and areas that bring revenue.","Local keyword and competitor research|Google Business Profile optimization and weekly posts|Citation cleanup and building|Location and service page optimization|Monthly ranking and calls report"],
+  ["Technical SEO",2500,"one-time",1,"3–4 weeks","Find and fix the technical issues that stop Google from crawling, indexing and ranking your site.","Full technical crawl and audit|Indexation, sitemap and robots fixes|Core Web Vitals recommendations|Schema markup implementation|Prioritized fix list with before/after report"],
+  ["On-page & content",1800,"monthly",3,"Ongoing; first pages live in 2–3 weeks","Pages and articles written to match what your customers search for, and existing pages tuned to rank.","Keyword map for key pages|4 optimized pages or articles per month|Title, meta and heading optimization|Internal linking updates"],
+  ["Link building",1500,"monthly",6,"Ongoing","Earn relevant, high-quality links that build your site's authority.","Link gap analysis against competitors|Outreach and digital PR|Local and industry links|Monthly link report"],
+  ["E-commerce SEO",2500,"monthly",6,"Ongoing; first improvements in 4–6 weeks","Rank more product and collection pages for buying-intent searches.","Collection and product page optimization|Product schema and feed checks|Category content|Technical fixes for faceted navigation|Monthly revenue-from-organic report"],
+  ["AI search visibility",1200,"monthly",3,"Ongoing","Get your business mentioned and recommended in AI assistants and AI search answers.","Audit of how AI assistants describe you today|Entity and brand profile cleanup|Content built to be cited|Monthly AI mention tracking"],
+  ["GBP optimization",900,"one-time",1,"2 weeks","A fully built-out Google Business Profile that converts views into calls.","Category, services and attributes setup|Photo and description optimization|Q&A and product listings|Review request process"],
+  ["GBP suspension",1500,"one-time",1,"2–6 weeks, depending on Google's review","Get your suspended Google Business Profile reinstated and protected from repeat suspensions.","Root-cause review of the suspension|Evidence package and reinstatement appeal|Follow-up with Google support until resolved|Compliance fixes to prevent repeat issues"],
+  ["Reviews management",400,"monthly",3,"Ongoing","More, better reviews and fast, professional responses.","Automated review request flow|Response to every review within 48 hours|Monthly review and rating report"],
+  ["Multi-location GBP",600,"one-time",1,"2 weeks per location","Each location gets its own verified, optimized Google listing. Priced per location.","Location verification support|Per-location profile optimization|Location pages on your website|Bulk management setup"],
+  ["Map pack ranking",1200,"monthly",6,"Ongoing; 3–6 months","Focused work to move your listing into the top 3 map results for priority searches.","Grid rank tracking across your service area|Profile and website signal improvements|Local links and citations|Monthly map visibility report"],
+  ["New website",7500,"one-time",1,"6–8 weeks","A fast, conversion-focused website built to rank from day one.","Sitemap, wireframes and copy guidance|Custom design, mobile first|Up to 12 pages with SEO setup|Forms, call tracking and analytics|Launch, redirects and training"],
+  ["Website redesign",6000,"one-time",1,"5–7 weeks","Rebuild your current site with a modern design while keeping the rankings you already have.","Content and SEO audit of the current site|New design and page templates|Redirect map to protect rankings|Speed and mobile optimization|Launch and training"],
+  ["Landing pages",1500,"one-time",1,"2 weeks","Dedicated landing pages built for ads or campaigns, designed to convert.","Copy and layout|Form and call tracking|A/B test variant|Speed optimization"],
+  ["Speed / Core Web Vitals",1800,"one-time",1,"2–3 weeks","Make your site load fast and pass Google's Core Web Vitals.","Performance audit|Image, script and caching fixes|Before/after Core Web Vitals report"],
+  ["Maintenance",300,"monthly",12,"Ongoing","Keep the site updated, backed up, secure and edited when you need it.","Updates and security monitoring|Daily backups|Up to 2 hours of edits per month|Uptime monitoring"],
+  ["New store build",9000,"one-time",1,"6–8 weeks","A Shopify store designed to sell, with the setup done right from the start.","Theme design and customization|Product, collection and navigation setup|Payments, shipping and tax setup|Apps and integrations|Launch and training"],
+  ["Shopify migration",12000,"one-time",1,"8–10 weeks","Move your store to Shopify without losing products, customers, orders or rankings.","Product, customer and order migration|URL redirect map to protect SEO|Theme setup and design matching|Apps and integration replacement|QA, launch and post-launch monitoring"],
+  ["Theme customization",3500,"one-time",1,"3–4 weeks","Custom changes to your Shopify theme for design and conversion.","Design changes and new sections|Mobile and speed checks|QA across devices"],
+  ["Conversion optimization",2000,"monthly",3,"Ongoing","Turn more visitors into buyers with testing and checkout improvements.","Conversion audit and heatmaps|2 tests per month|Product page and cart improvements|Monthly results report"],
+  ["Apps & integrations",2500,"one-time",1,"2–4 weeks","Connect Shopify to the tools you run your business on.","Requirements and app selection|Setup and configuration|Data sync testing"],
+  ["Google Ads",1500,"monthly",3,"Launch in 2 weeks","Search campaigns built around high-intent keywords, managed to cost per lead. Ad spend is paid to Google separately.","Account and conversion tracking setup|Keyword and campaign build|Ad copy and extensions|Weekly optimization|Monthly cost-per-lead report"],
+  ["Local Services Ads",900,"monthly",3,"Live in 2–4 weeks, after Google screening","Get the Google Guaranteed badge and pay per lead at the very top of search. Ad spend is paid to Google separately.","Google screening and verification support|Profile and service area setup|Lead dispute management|Budget and bidding management"],
+  ["Meta Ads",1500,"monthly",3,"Launch in 2 weeks","Facebook and Instagram campaigns for awareness, leads or sales. Ad spend is paid to Meta separately.","Pixel and conversion setup|Audience and creative strategy|Campaign build and testing|Monthly performance report"],
+  ["Shopping / PMax",1800,"monthly",3,"Launch in 2–3 weeks","Shopping and Performance Max campaigns managed to return on ad spend. Ad spend is paid to Google separately.","Merchant Center and feed optimization|Campaign structure by margin|Weekly bid and budget management|Monthly ROAS report"],
+  ["Ads audit",1200,"one-time",1,"1–2 weeks","A full review of your ad accounts with a clear plan to cut waste.","Account structure and tracking review|Wasted spend analysis|Prioritized action plan"],
+  ["Full marketing audit",2500,"one-time",1,"2–3 weeks","A complete review of your website, Google listing, SEO and ads with a prioritized plan.","Website and SEO audit|Google Business Profile review|Ads review|Competitor benchmark|Prioritized 90-day plan"],
+  ["SEO audit",1500,"one-time",1,"2 weeks","A detailed SEO review of your site with a prioritized fix list.","Technical, on-page and link review|Competitor gap analysis|Prioritized fix list"],
+  ["Free consult",0,"one-time",1,"1 call","A free strategy call to review where you stand and what to do first.","45-minute strategy call|Summary of recommendations"]
+];
+const DEFAULT_CATALOG = {};
+CATALOG_ROWS.forEach(([s,price,billing,term,timeline,summary,del])=>{
+  DEFAULT_CATALOG[s] = {category: CATEGORIES.find(c=>SUBS[c].includes(s)), price, billing, term, timeline, summary, deliverables: del.split("|")};
+});
+const DEFAULT_AGENCY = {
+  name:"Your agency name", contact:"", validDays:14, footer:"",
+  paymentTerms:"One-time projects: 50% due at signing, 50% at launch.\nMonthly services: billed in advance on the 1st of each month for the minimum term shown, then month to month with 30 days' written notice to cancel.\nAd spend is paid directly to the ad platform and is not included in these prices."
+};
+const PAIRINGS = {
+  "GBP suspension":["GBP optimization","Reviews management"], "GBP optimization":["Local SEO","Reviews management"],
+  "Local SEO":["GBP optimization","Reviews management"], "Map pack ranking":["Reviews management","Local SEO"],
+  "Shopify migration":["E-commerce SEO","Conversion optimization"], "New store build":["E-commerce SEO","Shopping / PMax"],
+  "New website":["Local SEO","Maintenance"], "Website redesign":["Speed / Core Web Vitals","Maintenance"],
+  "Local Services Ads":["GBP optimization","Reviews management"], "Google Ads":["Landing pages","Local SEO"],
+  "Shopping / PMax":["Conversion optimization","E-commerce SEO"], "Meta Ads":["Landing pages"],
+  "Full marketing audit":["Local SEO","Google Ads"], "SEO audit":["Technical SEO","Local SEO"], "Technical SEO":["On-page & content"]
+};
+const PSTATUS = ["Draft","Sent","Accepted","Declined"];
+
+/* ---------- dates ---------- */
+const pad = n => String(n).padStart(2,"0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => iso(new Date());
+const addDays = (s,n) => { const [y,m,d]=s.split("-").map(Number); const x=new Date(y,m-1,d); x.setDate(x.getDate()+n); return iso(x); };
+const daysBetween = (a,b) => { const p=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d)}; return Math.round((p(b)-p(a))/864e5); };
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fmtDate = s => { if(!s) return ""; const [y,m,d]=s.split("-").map(Number); return `${MON[m-1]} ${d}`; };
+function relDue(s){
+  if(!s) return "";
+  const n = daysBetween(today(), s);
+  if(n===0) return "Today";
+  if(n===-1) return "Yesterday";
+  if(n<0) return `${-n}d overdue`;
+  if(n===1) return "Tomorrow";
+  return `in ${n}d`;
+}
+const money = v => { v=Number(v)||0; if(!v) return "—"; return v>=1000 ? "$"+(v/1000).toFixed(v%1000===0||v>=100000?0:1).replace(/\.0$/,"")+"k" : "$"+v; };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- qualification rules ---------- */
+function autoTag(l){
+  if(l.fit==="No") return "Disqualify";
+  if(l.timeline==="Just researching") return "Nurture";
+  if(!l.budget || !l.timeline) return "";
+  const big = ["$2.5–5k","$5–10k","$10k+"].includes(l.budget);
+  const soon = ["ASAP","Within 30 days"].includes(l.timeline);
+  return big && soon ? "Hot" : "Warm";
+}
+const tagOf = l => l.tagOverride || autoTag(l) || "Unqualified";
+const FU_DAYS = {Hot:0, Warm:2, Nurture:30};
+const TAG_ACTION = {Hot:"Call the same day", Warm:"Follow up within 1–2 days", Nurture:"Email follow-up, check back in 30 days", Disqualify:"Send a polite no or refer out", Unqualified:"Add budget and timeline to tag"};
+function tagWhy(l){
+  if(l.tagOverride) return "Set by hand";
+  if(l.fit==="No") return "Not a fit";
+  if(l.timeline==="Just researching") return "Just researching";
+  if(!l.budget || !l.timeline) return "Needs budget and timeline";
+  return `${l.budget} · ${l.timeline}`;
+}
+const reachedProposal = l => !!l.proposalSent || l.stage==="Proposal sent" || l.stage==="Won";
+
+/* ---------- example leads (shown only while nothing is saved) ---------- */
+function samples(){
+  const t = today(), d = n => addDays(t,n);
+  const rows = [
+    {name:"Dana Whitfield",company:"Glow Aesthetics",phone:"(512) 555-0142",source:"Website form",ask:"Google listing got suspended last week, calls dropped to zero",category:"Google Business Profile",subService:"GBP suspension",industry:"Med spa",city:"Austin",budget:"$2.5–5k",timeline:"ASAP",fit:"Yes",stage:"New",captured:t,owner:"Maya",nextFollowUp:t,contactPref:"Call"},
+    {name:"Marcus Lee",company:"Lee Plumbing",phone:"(602) 555-0188",source:"Phone call",ask:"Wants to show up in the map pack for 'emergency plumber'",category:"SEO",subService:"Local SEO",industry:"Home services",city:"Phoenix",budget:"$1–2.5k",timeline:"Within 30 days",fit:"Yes",stage:"Contacted",captured:d(-2),contacted:d(-1),owner:"Jordan",nextFollowUp:t,contactPref:"Text"},
+    {name:"Priya Shah",company:"Saffron & Salt",email:"priya@example.com",source:"Referral",ask:"Moving from WooCommerce to Shopify, 1,800 SKUs",category:"Shopify",subService:"Shopify migration",industry:"E-commerce",city:"Chicago",budget:"$10k+",timeline:"1–3 months",fit:"Yes",stage:"Proposal sent",captured:d(-12),contacted:d(-11),discoveryDate:d(-7),proposalSent:d(-3),proposalValue:14500,proposalScope:"Shopify migration, SEO redirect plan",proposalId:"ex-prop-0",owner:"Sam",nextFollowUp:d(-1),pr_site:true,pr_data:true,contactPref:"Email"},
+    {name:"Rita Gomez",company:"Gomez Roofing",phone:"(214) 555-0101",source:"Google Maps / GBP",ask:"Asked about Local Services Ads after storm season",category:"Paid Media",subService:"Local Services Ads",industry:"Home services",city:"Dallas",budget:"$5–10k",timeline:"ASAP",fit:"Yes",stage:"Discovery booked",captured:d(-3),contacted:d(-3),discoveryDate:d(1),owner:"Alex",nextFollowUp:d(1),contactPref:"Call"},
+    {name:"Ken Ota",company:"Ota Family Dental",email:"ken@example.com",source:"AI assistant mention",ask:"Saw us recommended by an AI assistant, wants to know what an audit covers",category:"Not sure / audit",subService:"Full marketing audit",industry:"Dental",city:"San Diego",budget:"$1–2.5k",timeline:"Just researching",fit:"Unsure",stage:"Nurture",captured:d(-6),owner:"Maya",nextFollowUp:d(24),contactPref:"Email"},
+    {name:"Leah Brooks",company:"Brooks Interiors",source:"Social DM",email:"leah@example.com",ask:"Wants a full site for $300",category:"Web",subService:"Website redesign",industry:"Professional services",city:"Tampa",budget:"Under $1k",timeline:"ASAP",fit:"No",stage:"Disqualified",captured:d(-5),owner:"Sam"},
+    {name:"Omar Haddad",company:"Northline HVAC",phone:"(303) 555-0177",source:"Referral",ask:"Rank in more suburbs around Denver",category:"SEO",subService:"Local SEO",industry:"Home services",city:"Denver",budget:"$2.5–5k",timeline:"Within 30 days",fit:"Yes",stage:"Won",captured:d(-24),contacted:d(-24),discoveryDate:d(-20),proposalSent:d(-17),proposalValue:3200,wonDate:d(-8),fu2:true,fu5:true,ob_web:true,ob_gbp:true,ob_ga:true,ob_kick:true,owner:"Jordan",contactPref:"Call"},
+    {name:"Jess Carter",company:"Bloom Botanics",email:"jess@example.com",source:"Website form",ask:"Shopping ads are spending but not converting",category:"Paid Media",subService:"Shopping / PMax",industry:"E-commerce",city:"Portland",budget:"$5–10k",timeline:"1–3 months",fit:"Yes",stage:"Lost",lostReason:"Went with a competitor",captured:d(-28),proposalSent:d(-20),proposalValue:6000,fu2:true,fu5:true,fu10:true,owner:"Alex",contactPref:"Email"},
+    {name:"Alan Price",company:"Price Injury Law",phone:"(305) 555-0119",source:"Phone call",ask:"New site with intake forms and practice-area pages",category:"Web",subService:"New website",industry:"Legal",city:"Miami",budget:"$5–10k",timeline:"Within 30 days",fit:"Yes",stage:"Proposal sent",captured:d(-16),contacted:d(-16),discoveryDate:d(-13),proposalSent:d(-11),proposalValue:9800,proposalId:"ex-prop-1",fu2:true,fu5:true,owner:"Sam",nextFollowUp:d(-1),contactPref:"Call"},
+    {name:"Nina Ortiz",company:"Luma Skin Studio",phone:"(305) 555-0164",source:"Google Maps / GBP",ask:"Get more reviews and rank for 'botox near me'",category:"Google Business Profile",subService:"GBP optimization",industry:"Med spa",city:"Miami",budget:"$1–2.5k",timeline:"ASAP",fit:"Yes",stage:"Won",captured:d(-40),proposalSent:d(-35),proposalValue:1800,wonDate:d(-30),fu2:true,ob_web:true,ob_gbp:true,ob_ga:true,ob_kick:true,ob_base:true,ob_plan:true,owner:"Maya",contactPref:"Text"},
+    {name:"Ben Archer",company:"Archer Pest Control",phone:"(919) 555-0130",source:"Google Maps / GBP",ask:"Second location needs its own listing",category:"Google Business Profile",subService:"Multi-location GBP",industry:"Home services",city:"Raleigh",stage:"New",captured:t,contactPref:"Call"}
+  ];
+  return rows.map((r,i)=>({id:"example-"+i, example:true, ...r}));
+}
+
+/* ---------- state ---------- */
+const S = {
+  db:null, live:false, leads:samples(), preview:true, canWrite:true, connecting:true,
+  routing:{"SEO":"Jordan","Google Business Profile":"Maya","Web":"Sam","Shopify":"Sam","Paid Media":"Alex","Not sure / audit":"Maya"},
+  routingSaved:false,
+  view:"today",
+  filter:{stage:"Open", q:"", tag:"", category:"", owner:"", source:""},
+  sort:{key:"nextFollowUp", dir:1},
+  period:"this-month",
+  editing:null,
+  realProposals:[], catalog:JSON.parse(JSON.stringify(DEFAULT_CATALOG)), agency:{...DEFAULT_AGENCY}, catalogSaved:false,
+  downloads:null, prop:null, propDirty:false, propFilter:"All"
+};
+const $ = s => document.querySelector(s);
+
+/* ---------- top-level render ---------- */
+function render(){
+  renderBanner(); renderCounts(); fillDatalists();
+  if(S.view==="today") renderToday();
+  if(S.view==="pipeline") renderPipeline();
+  if(S.view==="proposals" && !S.prop) renderPropList();   // the open editor is never redrawn from under the user
+  if(S.view==="review") renderReview();
+  if(S.view==="routing" && !S.settingsDirty) renderRouting();
+}
+function renderBanner(){
+  const b = $("#banner");
+  if(S.preview){
+    b.hidden = false;
+    b.innerHTML = S.db
+      ? `<span><b>Example leads.</b> These aren't saved. Add your first real lead and they disappear.</span><button class="btn small primary" type="button" data-act="new">Add first lead</button>`
+      : S.connecting
+        ? `<span><b>Example leads.</b> Connecting to your saved leads…</span>`
+        : `<span><b>Example leads.</b> Can't reach Workboard right now. Reload the page to try again.</span>`;
+  } else if(!S.canWrite){
+    b.hidden = false; b.innerHTML = `<span><b>View only.</b> You can read the pipeline but not change it.</span>`;
+  } else b.hidden = true;
+}
+function renderCounts(){
+  const open = S.leads.filter(l=>OPEN.includes(l.stage));
+  $("#c-pipe").textContent = open.length;
+  $("#c-props").textContent = propsList().filter(p=>p.status==="Draft"||p.status==="Sent").length || "";
+  const t = today();
+  const due = S.leads.filter(l=>(OPEN.includes(l.stage)||l.stage==="Nurture") && l.nextFollowUp && l.nextFollowUp<=t).length
+    + S.leads.filter(l=>l.stage==="New" && tagOf(l)==="Hot" && !(l.nextFollowUp && l.nextFollowUp<=t)).length;
+  $("#c-today").textContent = due || "";
+  $("#hdr-sub").textContent = `${open.length} open · ${S.leads.length} total`;
+}
+function fillDatalists(){
+  $("#dl-industry").innerHTML = INDUSTRIES.map(x=>`<option value="${esc(x)}">`).join("");
+  const owners = [...new Set([...Object.values(S.routing), ...S.leads.map(l=>l.owner)].filter(Boolean))].sort();
+  $("#dl-owner").innerHTML = owners.map(x=>`<option value="${esc(x)}">`).join("");
+}
+
+/* ---------- Today ---------- */
+function itemRow(l, whenHtml, subOverride){
+  const tg = tagOf(l);
+  const sub = subOverride ?? [l.company, l.subService || l.category, l.owner ? "→ "+l.owner : "Unassigned"].filter(Boolean).join(" · ");
+  return `<li class="item" data-id="${esc(l.id)}" tabindex="0">
+    <span class="stripe s-${tg}"></span>
+    <div class="who"><b>${esc(l.name)}</b> <span class="tag t-${tg}">${tg}</span><div class="sub">${esc(sub)}</div></div>
+    <div class="when">${whenHtml}</div></li>`;
+}
+function panel(title, rule, rows, emptyText){
+  return `<div class="panel"><div class="panel-h"><h2>${title}</h2><span class="num" style="color:var(--muted)">${rows.length}</span><span class="rule">${rule}</span></div>
+    ${rows.length ? `<ul class="items">${rows.join("")}</ul>` : `<div class="empty">${emptyText}</div>`}</div>`;
+}
+function renderToday(){
+  const t = today(), L = S.leads;
+  const monthKey = t.slice(0,7);
+  const open = L.filter(l=>OPEN.includes(l.stage));
+  const callNow = open.filter(l=>l.stage==="New" && tagOf(l)==="Hot");
+  const callIds = new Set(callNow.map(l=>l.id));
+  const due = L.filter(l=>(OPEN.includes(l.stage)||l.stage==="Nurture") && l.nextFollowUp && l.nextFollowUp<=t && !callIds.has(l.id))
+    .sort((a,b)=>a.nextFollowUp.localeCompare(b.nextFollowUp));
+  const propFU = [];
+  L.filter(l=>l.stage==="Proposal sent" && l.proposalSent).forEach(l=>{
+    for(const n of [2,5,10]){ if(!l["fu"+n]){ const dd=addDays(l.proposalSent,n); if(dd<=addDays(t,1)) propFU.push({l,n,dd}); break; } }
+  });
+  const needs = open.filter(l=>!l.category || !l.budget || !l.timeline || !l.owner || !l.nextFollowUp);
+  const onboarding = L.filter(l=>l.stage==="Won" && ONBOARD.some(([k])=>!l[k]));
+  const overdue = L.filter(l=>(OPEN.includes(l.stage)||l.stage==="Nurture") && l.nextFollowUp && l.nextFollowUp<t).length;
+  const weekNew = L.filter(l=>l.captured && daysBetween(l.captured,t)<7).length;
+  const pipeVal = L.filter(l=>l.stage==="Proposal sent").reduce((s,l)=>s+(Number(l.proposalValue)||0),0);
+  const wonMonth = L.filter(l=>l.stage==="Won" && (l.wonDate||"").startsWith(monthKey));
+  const wonVal = wonMonth.reduce((s,l)=>s+(Number(l.proposalValue)||0),0);
+
+  const dueCell = d => { const r=relDue(d); return `<span class="${d<t?"late":""}">${r}</span><div class="sub mono" style="color:var(--muted)">${fmtDate(d)}</div>`; };
+
+  $("#view-today").innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><span class="v num">${open.length}</span><span class="l">Open leads</span></div>
+      <div class="kpi"><span class="v num">${weekNew}</span><span class="l">Captured last 7 days</span></div>
+      <div class="kpi"><span class="v num ${callNow.length?"alert":""}">${callNow.length}</span><span class="l">Hot, not yet called</span></div>
+      <div class="kpi"><span class="v num ${overdue?"alert":""}">${overdue}</span><span class="l">Follow-ups overdue</span></div>
+      <div class="kpi"><span class="v num">${money(pipeVal)}</span><span class="l">Out in proposals</span></div>
+      <div class="kpi"><span class="v num">${money(wonVal)}</span><span class="l">Won in ${MON[Number(monthKey.slice(5))-1]} · ${wonMonth.length} deal${wonMonth.length===1?"":"s"}</span></div>
+    </div>
+    <div class="cols">
+      ${panel("Call today","Hot = $2.5k+ and starting within 30 days", callNow.map(l=>itemRow(l, `<span class="late">${l.contactPref||"Call"}</span><div class="sub mono" style="color:var(--muted)">${esc(l.phone||l.email||"")}</div>`)), "No hot leads waiting. Nice.")}
+      ${panel("Follow-ups due","Next follow-up date reached", due.map(l=>itemRow(l, dueCell(l.nextFollowUp), [l.company, l.stage, l.owner?"→ "+l.owner:"Unassigned"].filter(Boolean).join(" · "))), "Nothing due today.")}
+      ${panel("Proposal follow-ups","Day 2, 5 and 10 after sending", propFU.map(({l,n,dd})=>{ const r = itemRow(l, dueCell(dd), `Day ${n} follow-up · ${money(l.proposalValue)} · ${l.owner||"Unassigned"}`); return l.proposalId && propsList().some(p=>p.id===l.proposalId) ? r.replace('<li class="item"', `<li class="item" data-prop="${esc(l.proposalId)}"`) : r; }), "No proposal follow-ups due.")}
+      ${panel("Needs qualifying","Missing category, budget, timeline, owner or date", needs.map(l=>{
+        const miss=[!l.category&&"category",!l.budget&&"budget",!l.timeline&&"timeline",!l.owner&&"owner",!l.nextFollowUp&&"follow-up date"].filter(Boolean);
+        return itemRow(l, `<span class="sub" style="color:var(--muted)">${fmtDate(l.captured)}</span>`, "Missing "+miss.join(", "));
+      }), "Every open lead is categorized, qualified and assigned.")}
+      ${panel("Onboarding","Won clients with setup still open", onboarding.map(l=>{
+        const done = ONBOARD.filter(([k])=>l[k]).length;
+        const next = ONBOARD.find(([k])=>!l[k]);
+        return itemRow(l, `<span class="mono">${done}/${ONBOARD.length}</span>`, `Next: ${next?next[1]:""} · ${l.owner||"Unassigned"}`);
+      }), "No clients in onboarding.")}
+    </div>`;
+}
+
+/* ---------- Pipeline ---------- */
+function filtered(){
+  const f = S.filter, q = f.q.trim().toLowerCase();
+  return S.leads.filter(l=>{
+    if(f.stage==="Open" && !OPEN.includes(l.stage)) return false;
+    if(f.stage!=="Open" && f.stage!=="All" && l.stage!==f.stage) return false;
+    if(f.tag && tagOf(l)!==f.tag) return false;
+    if(f.category && l.category!==f.category) return false;
+    if(f.owner && (l.owner||"")!==f.owner) return false;
+    if(f.source && l.source!==f.source) return false;
+    if(q && ![l.name,l.company,l.ask,l.city,l.industry,l.subService,l.email,l.phone].join(" ").toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+const TAG_ORDER = {Hot:0,Warm:1,Unqualified:2,Nurture:3,Disqualify:4};
+function sortVal(l,k){
+  if(k==="tag") return TAG_ORDER[tagOf(l)];
+  if(k==="stage") return STAGES.indexOf(l.stage);
+  if(k==="budget") return BUDGETS.indexOf(l.budget);
+  if(k==="value") return Number(l.proposalValue)||0;
+  return (l[k]||"").toString().toLowerCase() || "￿";
+}
+function renderPipeline(){
+  const counts = {}; STAGES.forEach(s=>counts[s]=0); S.leads.forEach(l=>counts[l.stage]=(counts[l.stage]||0)+1);
+  const openN = S.leads.filter(l=>OPEN.includes(l.stage)).length;
+  const chips = [["Open",openN],["All",S.leads.length],...STAGES.map(s=>[s,counts[s]])]
+    .map(([s,n])=>`<button type="button" class="chip" data-stage="${esc(s)}" aria-pressed="${S.filter.stage===s}">${esc(s)} <span class="n">${n}</span></button>`).join("");
+  const owners = [...new Set(S.leads.map(l=>l.owner).filter(Boolean))].sort();
+  const opt = (arr,val,label) => `<option value="">${label}</option>`+arr.map(x=>`<option ${x===val?"selected":""}>${esc(x)}</option>`).join("");
+  const rows = filtered().sort((a,b)=>{const x=sortVal(a,S.sort.key),y=sortVal(b,S.sort.key);return (x>y?1:x<y?-1:0)*S.sort.dir;});
+  const t = today();
+  const th = (k,label,cls="") => `<th data-sort="${k}" class="${cls}">${label}${S.sort.key===k?(S.sort.dir>0?" ↑":" ↓"):""}</th>`;
+  const keepFocus = document.activeElement && document.activeElement.id==="f-q";
+  $("#view-pipeline").innerHTML = `
+    <div class="stages">${chips}</div>
+    <div class="filters">
+      <input type="search" id="f-q" placeholder="Search name, business, city, request…" value="${esc(S.filter.q)}" aria-label="Search leads">
+      <select id="f-tag" aria-label="Tag">${opt([...TAGS,"Unqualified"],S.filter.tag,"All tags")}</select>
+      <select id="f-category" aria-label="Category">${opt(CATEGORIES,S.filter.category,"All categories")}</select>
+      <select id="f-owner" aria-label="Owner">${opt(owners,S.filter.owner,"All owners")}</select>
+      <select id="f-source" aria-label="Source">${opt(SOURCES,S.filter.source,"All sources")}</select>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>${th("name","Lead")}${th("tag","Tag")}${th("category","Service")}${th("industry","Industry · city")}${th("budget","Budget")}${th("stage","Stage")}${th("owner","Owner")}${th("nextFollowUp","Next follow-up")}${th("value","Value","num")}${th("captured","Captured")}</tr></thead>
+      <tbody>${rows.length ? rows.map(l=>{
+        const tg=tagOf(l);
+        const fu = l.nextFollowUp && (OPEN.includes(l.stage)||l.stage==="Nurture") ? `<span class="${l.nextFollowUp<t?"late":""}">${relDue(l.nextFollowUp)}</span><div class="sub mono">${fmtDate(l.nextFollowUp)}</div>` : `<span class="sub">—</span>`;
+        return `<tr data-id="${esc(l.id)}" tabindex="0">
+          <td><b>${esc(l.name)}</b>${l.company?` <span class="sub">· ${esc(l.company)}</span>`:""}<div class="sub">${esc(l.ask)}</div></td>
+          <td><span class="tag t-${tg}">${tg}</span></td>
+          <td>${esc(l.subService||"—")}<div class="sub">${esc(l.category||"")}</div></td>
+          <td>${esc(l.industry||"—")}<div class="sub">${esc(l.city||"")}</div></td>
+          <td class="mono" style="white-space:nowrap">${esc(l.budget||"—")}<div class="sub">${esc(l.timeline||"")}</div></td>
+          <td><span class="stage ${esc(l.stage)}">${esc(l.stage)}</span></td>
+          <td>${esc(l.owner||"—")}</td>
+          <td style="white-space:nowrap">${fu}</td>
+          <td class="num">${money(l.proposalValue)}</td>
+          <td class="mono" style="white-space:nowrap">${fmtDate(l.captured)}<div class="sub">${esc(l.source||"")}</div></td></tr>`;
+      }).join("") : `<tr><td colspan="10" class="empty">No leads match these filters.</td></tr>`}</tbody>
+    </table></div>`;
+  if(keepFocus){ const el=$("#f-q"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+}
+
+/* ---------- Monthly review ---------- */
+function periodRange(p){
+  const t = today(), [y,m] = t.split("-").map(Number);
+  if(p==="this-month") return [`${y}-${pad(m)}-01`, t, `${MON[m-1]} ${y}`];
+  if(p==="last-month"){ const d=new Date(y,m-2,1); const e=new Date(y,m-1,0); return [iso(d), iso(e), `${MON[d.getMonth()]} ${d.getFullYear()}`]; }
+  if(p==="90") return [addDays(t,-89), t, "the last 90 days"];
+  if(p==="year") return [`${y}-01-01`, t, String(y)];
+  return ["0000-01-01", t, "all time"];
+}
+function groupBy(rows, keyFn){
+  const m = new Map();
+  rows.forEach(l=>{ const k=keyFn(l)||"(not set)"; if(!m.has(k)) m.set(k,{key:k,leads:0,props:0,won:0,value:0,items:[]}); const g=m.get(k); g.leads++; g.items.push(l); if(reachedProposal(l)) g.props++; if(l.stage==="Won"){g.won++; g.value+=Number(l.proposalValue)||0;} });
+  return [...m.values()];
+}
+function barsBlock(groups, sortKey="leads"){
+  groups.sort((a,b)=>b[sortKey]-a[sortKey] || b.leads-a.leads);
+  const max = Math.max(1,...groups.map(g=>g.leads));
+  if(!groups.length) return `<div class="empty">No leads in this period.</div>`;
+  return `<div class="bars">${groups.map(g=>`<div class="bar-row">
+    <span class="lbl" title="${esc(g.key)}">${esc(g.key)}</span>
+    <div class="track" role="img" aria-label="${esc(g.key)}: ${g.leads} leads, ${g.props} proposals, ${g.won} won">
+      <span class="b-all" style="width:${g.leads/max*100}%"></span><span class="b-prop" style="width:${g.props/max*100}%"></span><span class="b-won" style="width:${g.won/max*100}%"></span></div>
+    <span class="nums"><b>${g.leads}</b> · ${g.props} · ${g.won}</span></div>`).join("")}</div>
+    <div class="legend"><span><i style="background:color-mix(in srgb,var(--accent) 28%,transparent)"></i>Leads</span><span><i style="background:color-mix(in srgb,var(--accent) 55%,transparent)"></i>Reached proposal</span><span><i style="background:var(--accent)"></i>Won</span></div>`;
+}
+const pct = (a,b) => b ? Math.round(a/b*100)+"%" : "—";
+function renderReview(){
+  const [from,to,label] = periodRange(S.period);
+  const rows = S.leads.filter(l=>l.captured && l.captured>=from && l.captured<=to);
+  const props = rows.filter(reachedProposal), won = rows.filter(l=>l.stage==="Won"), lost = rows.filter(l=>l.stage==="Lost");
+  const wonVal = won.reduce((s,l)=>s+(Number(l.proposalValue)||0),0);
+  const qualified = rows.filter(l=>["Hot","Warm"].includes(tagOf(l)));
+  const bySource = groupBy(rows, l=>l.source);
+  const byCat = groupBy(rows, l=>l.category);
+  const bySub = groupBy(rows, l=>l.subService);
+  const byTag = groupBy(rows, l=>tagOf(l));
+  const byLost = groupBy(lost, l=>l.lostReason);
+  const topSub = [...bySub].filter(g=>g.won).sort((a,b)=>b.value-a.value)[0];
+  const topSource = [...bySource].sort((a,b)=>b.won-a.won || b.props-a.props)[0];
+  const subTable = [...bySub].sort((a,b)=>b.value-a.value || b.won-a.won || b.leads-a.leads);
+
+  $("#view-review").innerHTML = `
+    <div class="period">
+      <h2 style="font-size:20px;margin-right:auto">Leads captured in ${esc(label)}</h2>
+      <label class="eyebrow" for="f-period">Period</label>
+      <select id="f-period">${[["this-month","This month"],["last-month","Last month"],["90","Last 90 days"],["year","This year"],["all","All time"]].map(([v,t])=>`<option value="${v}" ${S.period===v?"selected":""}>${t}</option>`).join("")}</select>
+    </div>
+    <div class="funnel">
+      <div class="step"><span class="eyebrow">Leads</span><span class="v num">${rows.length}</span><span class="rate">${qualified.length} qualified Hot/Warm</span></div>
+      <div class="step"><span class="eyebrow">Proposals</span><span class="v num">${props.length}</span><span class="rate">${pct(props.length,rows.length)} of leads</span></div>
+      <div class="step"><span class="eyebrow">Won</span><span class="v num">${won.length}</span><span class="rate">${pct(won.length,props.length)} of proposals</span></div>
+      <div class="step"><span class="eyebrow">Won value</span><span class="v num">${money(wonVal)}</span><span class="rate">${won.length?money(Math.round(wonVal/won.length))+" avg deal":"—"}</span></div>
+      <div class="step"><span class="eyebrow">Lost</span><span class="v num">${lost.length}</span><span class="rate">${byLost.sort((a,b)=>b.leads-a.leads)[0]?.key ? "Top reason: "+esc(byLost[0].key) : "—"}</span></div>
+    </div>
+    <div class="cols">
+      <div class="panel"><div class="panel-h"><h2>By source</h2><span class="rule">leads · proposals · won</span></div>${barsBlock(bySource)}
+        ${topSource && topSource.leads ? `<div class="insight">Best source: <b>${esc(topSource.key)}</b>, ${topSource.won} won from ${topSource.leads} lead${topSource.leads===1?"":"s"}.</div>`:""}</div>
+      <div class="panel"><div class="panel-h"><h2>By category</h2><span class="rule">leads · proposals · won</span></div>${barsBlock(byCat)}</div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Which services sell best</h2><span class="rule">sorted by won value</span></div>
+      <div class="tbl-wrap" style="border:0;border-radius:0"><table style="min-width:640px">
+        <thead><tr><th>Sub-service</th><th>Category</th><th class="num">Leads</th><th class="num">Proposals</th><th class="num">Won</th><th class="num">Lead → proposal</th><th class="num">Win rate</th><th class="num">Won value</th></tr></thead>
+        <tbody>${subTable.length ? subTable.map(g=>`<tr style="cursor:default"><td><b>${esc(g.key)}</b></td><td class="sub">${esc(g.items[0].category||"")}</td><td class="num">${g.leads}</td><td class="num">${g.props}</td><td class="num">${g.won}</td><td class="num">${pct(g.props,g.leads)}</td><td class="num">${pct(g.won,g.props)}</td><td class="num">${money(g.value)}</td></tr>`).join("") : `<tr><td colspan="8" class="empty">No leads in this period.</td></tr>`}</tbody>
+      </table></div>
+      ${topSub ? `<div class="insight">Focus: <b>${esc(topSub.key)}</b> brought in ${money(topSub.value)} from ${topSub.won} win${topSub.won===1?"":"s"}.</div>`:""}
+    </div>
+    <div class="cols">
+      <div class="panel"><div class="panel-h"><h2>Lead quality</h2><span class="rule">by tag</span></div>${barsBlock(byTag)}</div>
+      <div class="panel"><div class="panel-h"><h2>Why we lost</h2><span class="rule">closed-lost leads</span></div>${barsBlock(byLost)}</div>
+    </div>`;
+}
+
+/* ---------- Routing ---------- */
+function renderRouting(){
+  const dis = (!S.canWrite || !S.db) ? "disabled" : "";
+  $("#view-routing").innerHTML = `
+    <div class="panel"><div class="panel-h"><h2>Who owns each category</h2><span class="rule">New leads are routed here automatically</span></div>
+      <div class="tbl-wrap" style="border:0;border-radius:0"><table class="routing" style="min-width:560px">
+        <thead><tr><th style="cursor:default">Category</th><th style="cursor:default">Owner</th><th style="cursor:default">Sub-services</th></tr></thead>
+        <tbody>${CATEGORIES.map((c,i)=>`<tr style="cursor:default"><td><b>${esc(c)}</b></td><td><input id="rt-${i}" data-cat="${esc(c)}" value="${esc(S.routing[c]||"")}" list="dl-owner" placeholder="Name" ${dis}></td><td class="sub">${SUBS[c].map(esc).join(", ")}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <div class="d-foot" style="border-radius:0 0 var(--r) var(--r)"><span class="msg" id="rt-msg">${!S.routingSaved?"Placeholder names. Replace them with your team.":""}</span><button class="btn primary" type="button" id="rt-save" ${dis}>Save routing</button></div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Tagging rules</h2><span class="rule">Applied automatically when budget and timeline are set</span></div>
+      <div class="rules">
+        <div class="rule-card"><span class="tag t-Hot">Hot</span><p>Budget $2.5k+ and starting ASAP or within 30 days.</p><p><b style="color:var(--ink)">Call the same day.</b> Follow-up set to today.</p></div>
+        <div class="rule-card"><span class="tag t-Warm">Warm</span><p>Everything in between.</p><p><b style="color:var(--ink)">Follow up within 1–2 days.</b> Follow-up set to +2 days.</p></div>
+        <div class="rule-card"><span class="tag t-Nurture">Nurture</span><p>Just researching, or a stalled deal.</p><p><b style="color:var(--ink)">Add to email follow-up</b>, check back in 30 days.</p></div>
+        <div class="rule-card"><span class="tag t-Disqualify">Disqualify</span><p>Fit check is "No": wrong service or no real budget.</p><p><b style="color:var(--ink)">Send a polite no</b> or refer them elsewhere.</p></div>
+      </div>
+      <div class="insight">Proposal follow-ups are scheduled at day 2, 5 and 10 after the sent date. Ticking one moves the next follow-up to the following step. You can override any tag by hand in the lead.</div>
+    </div>` + catalogHTML();
+}
+
+/* ---------- Lead editor ---------- */
+const sel = (k, arr, val, ph="—") => `<select id="f-${k}" name="${k}"><option value="">${ph}</option>${arr.map(x=>`<option ${x===val?"selected":""}>${esc(x)}</option>`).join("")}</select>`;
+const inp = (k, val, type="text", extra="") => `<input id="f-${k}" name="${k}" type="${type}" value="${esc(val??"")}" ${extra}>`;
+const fld = (k, label, control, cls="") => `<div class="field ${cls}"><label for="f-${k}">${label}</label>${control}</div>`;
+const chk = (k, label, val) => `<label><input type="checkbox" id="f-${k}" name="${k}" ${val?"checked":""}> ${esc(label)}</label>`;
+function openSections(stage, isNew){
+  if(isNew) return [1,2,3,4];
+  return {"New":[1,2,3,4],"Contacted":[4,5,6],"Discovery booked":[5,6],"Discovery done":[6,7],"Proposal sent":[7],"Won":[8,9],"Lost":[8],"Nurture":[3,4],"Disqualified":[3,8]}[stage]||[1];
+}
+function step(n, title, hint, body, open){
+  return `<details class="step" ${open?"open":""} data-step="${n}"><summary><span class="no">${String(n).padStart(2,"0")}</span><h3>${title}</h3><span class="hint">${esc(hint)}</span></summary>${body}</details>`;
+}
+function openLead(id){
+  const isNew = !id;
+  const l = isNew ? {stage:"New", captured:today()} : S.leads.find(x=>x.id===id);
+  if(!l) return;
+  S.editing = {id: isNew?null:id, isNew, example: !!l.example};
+  const os = openSections(l.stage, isNew);
+  const ro = !S.canWrite || l.example || (!S.db);
+  const t = today();
+  const fuRows = [2,5,10].map(n=>{ const dd = l.proposalSent?addDays(l.proposalSent,n):""; return `<label><input type="checkbox" id="f-fu${n}" name="fu${n}" ${l["fu"+n]?"checked":""}> Day ${n} follow-up <span class="d ${dd&&!l["fu"+n]&&dd<t?"late":""}">${dd?fmtDate(dd):"set sent date"}</span></label>`; }).join("");
+  const obDone = ONBOARD.filter(([k])=>l[k]).length;
+  const prepDone = PREP.filter(([k])=>l[k]).length;
+  const d = $("#drawer");
+  d.innerHTML = `
+    <div class="d-head">
+      <div class="row"><h2>${isNew?"New lead":esc(l.name)}</h2><button class="btn small" type="button" data-act="close" aria-label="Close">Close</button></div>
+      <div class="row">
+        <div class="field" style="flex:1 1 200px"><label for="f-stage">Stage</label>${sel("stage",STAGES,l.stage,"New").replace('<option value="">New</option>','')}</div>
+        <div class="tagbox" id="tagbox" style="flex:1 1 240px"></div>
+      </div>
+    </div>
+    <form class="d-body" id="lead-form" autocomplete="off">
+      ${step(1,"Capture","Log it the same day",`<div class="grid">
+        ${fld("captured","Date captured",inp("captured",l.captured,"date"))}
+        ${fld("source","Source",sel("source",SOURCES,l.source))}
+        ${fld("name",'Name <span class="req">*</span>',inp("name",l.name,"text",'required'))}
+        ${fld("company","Business",inp("company",l.company))}
+        ${fld("phone","Phone",inp("phone",l.phone,"tel"))}
+        ${fld("email","Email",inp("email",l.email,"email"))}
+        ${fld("contactPref","Prefers",sel("contactPref",CONTACT,l.contactPref))}
+        <div></div>
+        ${fld("ask",'What they asked about <span class="req">*</span>',`<textarea id="f-ask" name="ask">${esc(l.ask||"")}</textarea>`,"full")}
+        <p class="statusline full" style="margin:0">Required: name, phone or email, and what they asked about.</p></div>`, os.includes(1))}
+      ${step(2,"Categorize",[l.category,l.subService].filter(Boolean).join(" · ")||"Category and sub-service",`<div class="grid">
+        ${fld("category","Main category",sel("category",CATEGORIES,l.category))}
+        ${fld("subService","Sub-service",inp("subService",l.subService,"text",'list="dl-sub" placeholder="e.g. Local SEO"'))}
+        ${fld("industry","Industry",inp("industry",l.industry,"text",'list="dl-industry" placeholder="e.g. Med spa"'))}
+        ${fld("city","Market / city",inp("city",l.city))}</div>`, os.includes(2))}
+      ${step(3,"Qualify",[l.budget,l.timeline].filter(Boolean).join(" · ")||"Budget, timeline, fit",`<div class="grid">
+        ${fld("budget","Budget",sel("budget",BUDGETS,l.budget))}
+        ${fld("timeline","Timeline",sel("timeline",TIMELINES,l.timeline))}
+        ${fld("fit","Fit check: a service we offer, at a size worth taking?",sel("fit",["Yes","Unsure","No"],l.fit),"full")}
+        ${fld("tagOverride","Tag",`<select id="f-tagOverride" name="tagOverride"><option value="">Auto (from rules)</option>${TAGS.map(x=>`<option ${x===l.tagOverride?"selected":""}>${x}</option>`).join("")}</select>`)}
+        ${fld("dqNote","Disqualify / referral note",inp("dqNote",l.dqNote,"text",'placeholder="Referred to…"'))}</div>`, os.includes(3))}
+      ${step(4,"Assign",[l.owner,l.nextFollowUp&&("next "+fmtDate(l.nextFollowUp))].filter(Boolean).join(" · ")||"Owner and next follow-up",`<div class="grid">
+        ${fld("owner","Owner",inp("owner",l.owner,"text",'list="dl-owner" placeholder="Routed by category"'))}
+        ${fld("nextFollowUp","Next follow-up",inp("nextFollowUp",l.nextFollowUp,"date"))}
+        <p class="statusline full" style="margin:0" id="assign-hint"></p></div>`, os.includes(4))}
+      ${step(5,"First contact",l.contacted?("contacted "+fmtDate(l.contacted)):"Reach out, book discovery",`<div class="grid">
+        ${fld("contacted","First contacted",inp("contacted",l.contacted,"date"))}
+        ${fld("discoveryDate","Discovery call",inp("discoveryDate",l.discoveryDate,"date"))}
+        ${fld("contactNote","Confirmed need",`<textarea id="f-contactNote" name="contactNote">${esc(l.contactNote||"")}</textarea>`,"full")}</div>`, os.includes(5))}
+      ${step(6,"Discovery",`prep ${prepDone}/${PREP.length}`,`<div class="grid">
+        <div class="field full"><span class="lab">Before the call</span><div class="checks">${PREP.map(([k,lab])=>chk(k,lab,l[k])).join("")}</div></div>
+        ${fld("goals","Goals",`<textarea id="f-goals" name="goals">${esc(l.goals||"")}</textarea>`)}
+        ${fld("competitors","Competitors",`<textarea id="f-competitors" name="competitors">${esc(l.competitors||"")}</textarea>`)}
+        ${fld("tried","What they've tried",`<textarea id="f-tried" name="tried">${esc(l.tried||"")}</textarea>`)}
+        ${fld("decisionMaker","Who decides",inp("decisionMaker",l.decisionMaker))}
+        ${fld("dataNotes","Data to back the pitch",`<textarea id="f-dataNotes" name="dataNotes" placeholder="Semrush numbers, Maps visibility…">${esc(l.dataNotes||"")}</textarea>`,"full")}</div>`, os.includes(6))}
+      ${step(7,"Proposal",l.proposalSent?(`sent ${fmtDate(l.proposalSent)} · ${money(l.proposalValue)}`):"Scope, price, follow-ups",`<div class="grid">
+        ${propBlock(l, isNew)}
+        ${fld("proposalScope","Scope",`<textarea id="f-proposalScope" name="proposalScope">${esc(l.proposalScope||"")}</textarea>`,"full")}
+        ${fld("proposalValue","Price (USD)",inp("proposalValue",l.proposalValue,"number",'min="0" step="100" inputmode="numeric"'))}
+        ${fld("proposalTimeline","Project timeline",inp("proposalTimeline",l.proposalTimeline,"text",'placeholder="e.g. 6 weeks, monthly retainer"'))}
+        ${fld("proposalSent","Sent on",inp("proposalSent",l.proposalSent,"date"))}
+        <div class="field"><span class="lab">Follow-ups after sending</span><div class="fu">${fuRows}</div></div></div>`, os.includes(7))}
+      ${step(8,"Close",l.stage==="Won"?"Won":l.stage==="Lost"?("Lost · "+(l.lostReason||"")):"Won, lost or stalled",`<div class="grid">
+        <p class="statusline full" style="margin:0">Set the stage at the top to Won, Lost, or Nurture (stalled).</p>
+        ${fld("wonDate","Won on",inp("wonDate",l.wonDate,"date"))}
+        <div class="field"><span class="lab">Paperwork</span><div class="checks">${chk("contract","Contract signed",l.contract)}${chk("invoice","Invoice sent",l.invoice)}</div></div>
+        ${fld("lostReason","Lost reason",sel("lostReason",LOST,l.lostReason))}
+        ${fld("lostNote","Lost detail",inp("lostNote",l.lostNote,"text",'placeholder="Which competitor, what price…"'))}</div>`, os.includes(8))}
+      ${step(9,"Onboard",l.stage==="Won"?`${obDone}/${ONBOARD.length} done`:"After a win",`<div class="grid">
+        <div class="field full"><span class="lab">Access, kickoff and plan</span><div class="checks">${ONBOARD.map(([k,lab])=>chk(k,lab,l[k])).join("")}</div></div></div>`, os.includes(9))}
+      ${step(10,"Notes","",`<div class="grid">${fld("notes","Notes",`<textarea id="f-notes" name="notes">${esc(l.notes||"")}</textarea>`,"full")}</div>`, false)}
+    </form>
+    <div class="d-foot">
+      <span class="msg" id="d-msg">${l.example?"Example lead. It can't be edited.":(!S.db?"Saving isn't available in this view.":(!S.canWrite?"View only.":""))}</span>
+      ${!isNew && !ro ? `<button class="btn danger" type="button" data-act="delete">Delete</button>` : ""}
+      <button class="btn" type="button" data-act="close">Cancel</button>
+      <button class="btn primary" type="button" data-act="save" ${ro?"disabled":""}>${isNew?"Add lead":"Save"}</button>
+    </div>`;
+  if(ro) d.querySelectorAll("#lead-form input,#lead-form select,#lead-form textarea,#f-stage").forEach(el=>el.disabled=true);
+  d.hidden = false; $("#backdrop").hidden = false;
+  updateSubList(); updateTagBox();
+  setTimeout(()=>{ const f = isNew ? $("#f-source") : null; if(f) f.focus(); }, 30);
+}
+function readForm(){
+  const o = {};
+  document.querySelectorAll("#drawer [name]").forEach(el=>{
+    if(el.type==="checkbox") o[el.name] = el.checked;
+    else if(el.type==="number") o[el.name] = el.value==="" ? null : Number(el.value);
+    else o[el.name] = el.value.trim();
+  });
+  return o;
+}
+function updateSubList(){
+  const c = $("#f-category")?.value;
+  $("#dl-sub").innerHTML = (c ? SUBS[c] : Object.values(SUBS).flat()).map(x=>`<option value="${esc(x)}">`).join("");
+}
+function updateTagBox(){
+  const o = readForm(); const tg = tagOf(o);
+  $("#tagbox").innerHTML = `<span class="tag t-${tg}">${tg}</span><span class="why">${esc(tagWhy(o))} → ${esc(TAG_ACTION[tg])}</span>`;
+  const owner = o.owner || (o.category && S.routing[o.category]) || "";
+  const fu = o.nextFollowUp || (tg in FU_DAYS ? addDays(today(), FU_DAYS[tg]) : "");
+  const h = $("#assign-hint");
+  if(h) h.textContent = (!o.owner && owner ? `Will route to ${owner} (${o.category}). ` : "") + (!o.nextFollowUp && fu ? `Follow-up will be set to ${fmtDate(fu)} (${tg}).` : "");
+}
+function applyRules(o, prev){
+  const t = today(), tg = tagOf(o);
+  if(!o.owner && o.category && S.routing[o.category]) o.owner = S.routing[o.category];
+  if(!o.nextFollowUp && tg in FU_DAYS && (OPEN.includes(o.stage)||o.stage==="Nurture")) o.nextFollowUp = addDays(t, FU_DAYS[tg]);
+  if(tg==="Disqualify" && o.stage==="New") o.stage = "Disqualified";
+  if(o.stage==="Proposal sent" && !o.proposalSent) o.proposalSent = t;
+  if(o.contacted==="" && prev && prev.stage==="New" && o.stage!=="New" && o.stage!=="Disqualified") o.contacted = t;
+  // proposal cadence: next unticked of day 2/5/10
+  if(o.stage==="Proposal sent" && o.proposalSent){
+    const next = [2,5,10].find(n=>!o["fu"+n]);
+    const changed = !prev || prev.proposalSent!==o.proposalSent || [2,5,10].some(n=>!!prev["fu"+n]!==!!o["fu"+n]) || prev.stage!=="Proposal sent";
+    if(changed) o.nextFollowUp = next ? addDays(o.proposalSent, next) : addDays(t, 30);
+  }
+  if(o.stage==="Nurture" && (!prev || prev.stage!=="Nurture")) { const n=addDays(t,30); if(!o.nextFollowUp || o.nextFollowUp<n) o.nextFollowUp = n; }
+  if(o.stage==="Won" && !o.wonDate) o.wonDate = t;
+  if(["Won","Lost","Disqualified"].includes(o.stage)) o.nextFollowUp = "";
+  return o;
+}
+async function saveLead(){
+  const msg = $("#d-msg"); msg.className = "msg";
+  const o = readForm();
+  if(!o.name) return fail("Add the lead's name.", "f-name");
+  if(!o.phone && !o.email) return fail("Add a phone number or email.", "f-phone");
+  if(!o.ask) return fail("Add what they asked about.", "f-ask");
+  if(o.stage==="Lost" && !o.lostReason){ openStep(8); return fail("Pick a lost reason.", "f-lostReason"); }
+  const ed = S.editing;
+  const prev = ed.isNew ? null : S.leads.find(x=>x.id===ed.id);
+  applyRules(o, prev);
+  o.updatedAt = new Date().toISOString();
+  if(ed.isNew) o.createdAt = o.updatedAt; else o.createdAt = prev?.createdAt || o.updatedAt;
+  for(const k in o) if(o[k]==="" || o[k]===null || o[k]===false) delete o[k];
+  const btn = document.querySelector('[data-act="save"]'); btn.disabled = true; btn.textContent = "Saving…";
+  try{
+    const ref = ed.isNew ? S.db.collection("leads").doc() : S.db.doc("leads/"+ed.id);
+    await ref.set(o);
+    closeDrawer();
+  }catch(e){
+    btn.disabled = false; btn.textContent = ed.isNew?"Add lead":"Save";
+    if(e && e.code==="invalid_argument"){ S.canWrite=false; fail("You don't have permission to change leads here."); render(); }
+    else if(e && e.code==="quota_exceeded") fail("The tracker is full. Delete old leads to add new ones.");
+    else fail("Couldn't save. Check your connection and try again.");
+  }
+  function fail(t, focusId){ msg.textContent = t; if(focusId){ const el=document.getElementById(focusId); if(el){ el.closest("details")?.setAttribute("open",""); el.focus(); } } }
+}
+function openStep(n){ document.querySelector(`details.step[data-step="${n}"]`)?.setAttribute("open",""); }
+let deleteArmed = false;
+async function deleteLead(btn){
+  if(!deleteArmed){ deleteArmed = true; btn.textContent = "Confirm delete"; setTimeout(()=>{deleteArmed=false; if(btn.isConnected) btn.textContent="Delete";}, 4000); return; }
+  deleteArmed = false;
+  try{ await S.db.doc("leads/"+S.editing.id).delete(); closeDrawer(); }
+  catch(e){ $("#d-msg").textContent = "Couldn't delete. Try again."; }
+}
+function closeDrawer(){ $("#drawer").hidden = true; $("#backdrop").hidden = true; S.editing = null; deleteArmed=false; }
+
+/* ---------- Proposals ---------- */
+const fmtUSD = n => "$" + Math.round(Number(n)||0).toLocaleString("en-US");
+const fmtLong = s => { if(!s) return ""; const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}); };
+const clone = o => JSON.parse(JSON.stringify(o));
+const leadOf = p => S.leads.find(l=>l.id===p.leadId);
+function exampleProposals(){
+  const L = id => S.leads.find(l=>l.id===id) || {};
+  const pr = L("example-2"), al = L("example-8"), t = today();
+  const item = (s, over={}) => ({name:s, ...clone(DEFAULT_CATALOG[s]), qty:1, ...over});
+  return [
+    {id:"ex-prop-0", example:true, leadId:"example-2", number:"P-1042", status:"Sent", title:"Shopify migration for Saffron & Salt",
+     sentDate:pr.proposalSent||t, validUntil:addDays(pr.proposalSent||t,14), createdAt:pr.proposalSent||t,
+     needs:"Saffron & Salt runs on WooCommerce with about 1,800 products. You want to move to Shopify within the next three months without losing search traffic or order history.",
+     goals:"Launch on Shopify with every product, customer and order moved over.\nKeep organic traffic flat or growing through the switch.",
+     approach:"We recommend a full migration with a dedicated redirect and SEO preservation plan, so the move to Shopify doesn't cost you rankings.",
+     lineItems:[item("Shopify migration"), {name:"SEO redirect & preservation plan", category:"SEO", summary:"Protect your rankings during the move.", deliverables:["Crawl of every current URL","1:1 redirect map","Post-launch ranking watch for 30 days"], price:2500, billing:"one-time", term:1, qty:1, timeline:"Runs alongside the migration"}],
+     discount:0, discountType:"$", timeline:"Weeks 1–2: discovery, data audit, redirect map\nWeeks 3–7: build, theme and data migration\nWeeks 8–10: QA, launch and monitoring", terms:DEFAULT_AGENCY.paymentTerms},
+    {id:"ex-prop-1", example:true, leadId:"example-8", number:"P-1039", status:"Sent", title:"New website for Price Injury Law",
+     sentDate:al.proposalSent||t, validUntil:addDays(al.proposalSent||t,14), createdAt:al.proposalSent||t,
+     needs:"Price Injury Law needs a new site with intake forms and a page for each practice area, live within 30 days.",
+     goals:"More qualified case inquiries from search.\nA site that makes intake fast on a phone.",
+     approach:"We recommend a new conversion-focused site with dedicated landing pages for your highest-value practice areas.",
+     lineItems:[item("New website",{price:8300}), item("Landing pages")],
+     discount:0, discountType:"$", timeline:"6–8 weeks from kickoff", terms:DEFAULT_AGENCY.paymentTerms}
+  ];
+}
+const propsList = () => S.preview ? exampleProposals() : S.realProposals;
+
+function calc(p){
+  let one=0, mon=0, monTerm=0;
+  (p.lineItems||[]).forEach(i=>{ const amt=(Number(i.price)||0)*(Number(i.qty)||1); if(i.billing==="monthly"){ mon+=amt; monTerm+=amt*(Number(i.term)||1); } else one+=amt; });
+  const sub = one+monTerm;
+  let disc = p.discountType==="%" ? sub*(Number(p.discount)||0)/100 : (Number(p.discount)||0);
+  disc = Math.min(Math.max(disc,0), sub);
+  return {one, mon, monTerm, sub, disc, total: sub-disc};
+}
+function catItem(s){ const c=S.catalog[s]; return c ? {name:s, ...clone(c), qty:1} : null; }
+function newProposal(l){
+  const first = catItem(l.subService) || {name:l.subService||"Custom service", category:l.category||"", summary:"", deliverables:[], price:Number(l.proposalValue)||0, billing:"one-time", term:1, qty:1, timeline:""};
+  const items = [first];
+  const intro = `${l.company||l.name}${l.city?" in "+l.city:""} reached out${l.source?" through "+l.source.toLowerCase():""} about: ${l.ask||""}`.trim();
+  const parts = [intro];
+  if(l.contactNote) parts.push(l.contactNote);
+  if(l.tried) parts.push("What you've tried so far: "+l.tried);
+  if(l.competitors) parts.push("Competitors we'll measure against: "+l.competitors);
+  if(l.dataNotes) parts.push("What the data shows: "+l.dataNotes);
+  const id = S.db ? S.db.collection("proposals").doc().id : "local-"+Date.now();
+  const t = today();
+  return {
+    id, leadId:l.id, leadExample:!!l.example, number:"P-"+t.slice(2).replace(/-/g,"")+"-"+Math.random().toString(36).slice(2,5).toUpperCase(),
+    status:"Draft", title:`${first.name} for ${l.company||l.name}`, createdAt:t, sentDate:"", validUntil:addDays(t, Number(S.agency.validDays)||14),
+    needs:parts.join("\n\n"), goals:l.goals||"",
+    approach:`Based on ${l.timeline ? "your timeline ("+l.timeline.toLowerCase()+")" : "what you shared"}, we recommend starting with ${first.name}.`,
+    lineItems:items, discount:0, discountType:"$",
+    timeline:first.timeline ? `${first.name}: ${first.timeline}` : "", terms:S.agency.paymentTerms
+  };
+}
+function suggestions(p){
+  const have = new Set(p.lineItems.map(i=>i.name));
+  const out = [];
+  p.lineItems.forEach(i=>(PAIRINGS[i.name]||[]).forEach(s=>{ if(!have.has(s) && !out.includes(s) && S.catalog[s]) out.push(s); }));
+  const cat = p.lineItems[0]?.category;
+  (SUBS[cat]||[]).forEach(s=>{ if(!have.has(s) && !out.includes(s)) out.push(s); });
+  return out.filter(s=>s!=="Free consult").slice(0,6);
+}
+const propRO = p => !S.db || !S.canWrite || !!p.example || !!p.leadExample || !!leadOf(p)?.example;
+
+function renderProposals(){ if(S.prop) renderPropEditor(); else renderPropList(); }
+function catalogNote(){ return S.catalogSaved ? "" : `<p class="note" style="margin:0"><b>Placeholder prices.</b> Proposals use starter rates until you set yours in Settings → Service catalog.</p>`; }
+function renderPropList(){
+  const all = propsList();
+  const counts = {All:all.length}; PSTATUS.forEach(s=>counts[s]=all.filter(p=>p.status===s).length);
+  const rows = all.filter(p=>S.propFilter==="All"||p.status===S.propFilter).sort((a,b)=>(b.updatedAt||b.createdAt||"").localeCompare(a.updatedAt||a.createdAt||""));
+  const leadsForNew = S.leads.filter(l=>OPEN.includes(l.stage)||l.stage==="Nurture").sort((a,b)=>a.name.localeCompare(b.name));
+  const t = today();
+  $("#view-proposals").innerHTML = `
+    <div class="toolbar">
+      <div class="stages" style="margin-right:auto">${["All",...PSTATUS].map(s=>`<button type="button" class="chip" data-pstatus="${s}" aria-pressed="${S.propFilter===s}">${s} <span class="n">${counts[s]}</span></button>`).join("")}</div>
+      <select id="pp-lead" aria-label="Lead for new proposal"><option value="">Choose a lead…</option>${leadsForNew.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}${l.company?" · "+esc(l.company):""}${l.subService?" — "+esc(l.subService):""}</option>`).join("")}</select>
+      <button type="button" class="btn primary" data-pact="new-pick">+ New proposal</button>
+    </div>
+    ${catalogNote()}
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="cursor:default">Proposal</th><th style="cursor:default">Lead</th><th style="cursor:default">Status</th><th class="num" style="cursor:default">One-time</th><th class="num" style="cursor:default">Monthly</th><th class="num" style="cursor:default">First-term total</th><th style="cursor:default">Sent</th><th style="cursor:default">Next follow-up</th></tr></thead>
+      <tbody>${rows.length ? rows.map(p=>{
+        const l = leadOf(p)||{}, c = calc(p);
+        const fu = p.status==="Sent" && l.stage==="Proposal sent" && l.nextFollowUp ? `<span class="${l.nextFollowUp<t?"late":""}">${relDue(l.nextFollowUp)}</span><div class="sub mono">${fmtDate(l.nextFollowUp)}</div>` : `<span class="sub">—</span>`;
+        return `<tr data-pid="${esc(p.id)}" tabindex="0">
+          <td><b>${esc(p.title)}</b><div class="sub mono">${esc(p.number)}</div></td>
+          <td>${esc(l.name||"Deleted lead")}<div class="sub">${esc(l.company||"")}</div></td>
+          <td><span class="pst ps-${esc(p.status)}">${esc(p.status)}</span></td>
+          <td class="num">${c.one?fmtUSD(c.one):"—"}</td>
+          <td class="num">${c.mon?fmtUSD(c.mon)+"/mo":"—"}</td>
+          <td class="num"><b>${fmtUSD(c.total)}</b></td>
+          <td class="mono" style="white-space:nowrap">${fmtDate(p.sentDate)||"—"}</td>
+          <td style="white-space:nowrap">${fu}</td></tr>`;
+      }).join("") : `<tr><td colspan="8" class="empty">${all.length?"No proposals with this status.":"No proposals yet. Choose a lead above, or open a lead and use Create proposal in step 07."}</td></tr>`}</tbody>
+    </table></div>`;
+}
+
+function totalsHTML(p){
+  const c = calc(p);
+  return `${c.one?`<div><span>One-time</span><span>${fmtUSD(c.one)}</span></div>`:""}
+    ${c.mon?`<div><span>Monthly</span><span>${fmtUSD(c.mon)}/mo</span></div><div><span>Monthly × minimum terms</span><span>${fmtUSD(c.monTerm)}</span></div>`:""}
+    ${c.disc?`<div><span>Discount</span><span>−${fmtUSD(c.disc)}</span></div>`:""}
+    <div class="big"><span>First-term total</span><span>${fmtUSD(c.total)}</span></div>`;
+}
+function renderPropEditor(){
+  const p = S.prop, l = leadOf(p) || {}, ro = propRO(p);
+  const sugs = suggestions(p);
+  const pf = (k, label, control, cls="") => `<div class="field ${cls}"><label for="pe-${k}">${label}</label>${control}</div>`;
+  const ta = (k, rows=3) => `<textarea id="pe-${k}" data-f="${k}" rows="${rows}">${esc(p[k]||"")}</textarea>`;
+  const catOpts = CATEGORIES.map(c=>`<optgroup label="${esc(c)}">${SUBS[c].map(s=>`<option value="${esc(s)}">${esc(s)} — ${S.catalog[s]?fmtUSD(S.catalog[s].price)+(S.catalog[s].billing==="monthly"?"/mo":""):""}</option>`).join("")}</optgroup>`).join("");
+  const keepId = document.activeElement?.id;
+  $("#view-proposals").innerHTML = `
+    <div class="pe-bar">
+      <button type="button" class="btn small" data-pact="back">← All proposals</button>
+      <h2>${esc(p.title||"Untitled proposal")}</h2>
+      <span class="pst ps-${esc(p.status)}">${esc(p.status)}</span>
+    </div>
+    <div class="pe-bar">
+      ${ro ? "" : `<button type="button" class="btn primary" data-pact="save">${p.status==="Draft"?"Save draft":"Save changes"}</button>
+      ${p.status!=="Sent"&&p.status!=="Accepted" ? `<button type="button" class="btn" data-pact="sent">Mark sent</button>`:""}
+      ${p.status==="Sent" ? `<button type="button" class="btn" data-pact="accepted">Mark accepted</button><button type="button" class="btn" data-pact="declined">Mark declined</button>`:""}
+      <button type="button" class="btn" data-pact="dup">Duplicate</button>`}
+      ${S.downloads ? `<button type="button" class="btn" data-pact="download">Download</button>` : ""}
+      ${!ro && S.realProposals.some(x=>x.id===p.id) ? `<button type="button" class="btn danger" data-pact="delete">Delete</button>` : ""}
+      <button type="button" class="btn small" data-pact="open-lead" style="margin-left:auto">Open lead: ${esc(l.name||"—")}</button>
+    </div>
+    <div class="pe-msg" id="pe-msg">${p.example||p.leadExample||l.example ? "Example proposal. It can't be saved." : (!S.db ? "Saving isn't available in this view." : (!S.canWrite ? "View only." : ""))}</div>
+    ${catalogNote()}
+    <div class="pe">
+      <form class="pe-form" id="pe-form" autocomplete="off">
+        <div class="panel"><div class="panel-h"><h2>Overview</h2><span class="rule mono">${esc(p.number)}</span></div><div class="grid">
+          ${pf("title","Proposal title",`<input id="pe-title" data-f="title" value="${esc(p.title)}">`,"full")}
+          ${pf("validUntil","Valid until",`<input id="pe-validUntil" type="date" data-f="validUntil" value="${esc(p.validUntil)}">`)}
+          ${pf("sentDate","Sent on",`<input id="pe-sentDate" type="date" data-f="sentDate" value="${esc(p.sentDate)}">`)}
+        </div></div>
+        <div class="panel"><div class="panel-h"><h2>Their needs</h2><span class="rule">Filled from the lead and discovery notes</span></div><div class="grid">
+          ${pf("needs","Your situation",ta("needs",5),"full")}
+          ${pf("goals","Goals",ta("goals",3),"full")}
+          ${pf("approach","Our recommendation",ta("approach",3),"full")}
+        </div></div>
+        <div class="panel"><div class="panel-h"><h2>Services</h2><span class="rule">Prices from the catalog, adjustable for this lead</span></div>
+          <div class="lis">${p.lineItems.length ? p.lineItems.map((i,n)=>`
+            <div class="li">
+              <div class="li-h">
+                ${pf(`li${n}-name`,`Service ${n+1}`,`<input id="pe-li${n}-name" data-li="${n}" data-k="name" value="${esc(i.name)}">`)}
+                <button type="button" class="iconbtn" data-pact="up" data-i="${n}" aria-label="Move up" ${n===0?"disabled":""}>↑</button>
+                <button type="button" class="iconbtn" data-pact="down" data-i="${n}" aria-label="Move down" ${n===p.lineItems.length-1?"disabled":""}>↓</button>
+                <button type="button" class="iconbtn" data-pact="remove" data-i="${n}" aria-label="Remove service">✕</button>
+              </div>
+              <div class="li-grid">
+                ${pf(`li${n}-price`,"Price (USD)",`<input id="pe-li${n}-price" type="number" min="0" step="50" inputmode="numeric" data-li="${n}" data-k="price" value="${esc(i.price)}">`)}
+                ${pf(`li${n}-billing`,"Billing",`<select id="pe-li${n}-billing" data-li="${n}" data-k="billing"><option value="one-time" ${i.billing!=="monthly"?"selected":""}>One-time</option><option value="monthly" ${i.billing==="monthly"?"selected":""}>Monthly</option></select>`)}
+                ${pf(`li${n}-qty`,"Qty",`<input id="pe-li${n}-qty" type="number" min="1" step="1" data-li="${n}" data-k="qty" value="${esc(i.qty||1)}">`)}
+                ${pf(`li${n}-term`,"Min. months",`<input id="pe-li${n}-term" type="number" min="1" step="1" data-li="${n}" data-k="term" value="${esc(i.term||1)}" ${i.billing==="monthly"?"":"disabled"}>`)}
+              </div>
+              ${pf(`li${n}-summary`,"What it does",`<textarea id="pe-li${n}-summary" rows="2" data-li="${n}" data-k="summary">${esc(i.summary||"")}</textarea>`)}
+              ${pf(`li${n}-deliverables`,"Deliverables (one per line)",`<textarea id="pe-li${n}-deliverables" rows="4" data-li="${n}" data-k="deliverables">${esc((i.deliverables||[]).join("\n"))}</textarea>`)}
+              ${pf(`li${n}-timeline`,"Timeline",`<input id="pe-li${n}-timeline" data-li="${n}" data-k="timeline" value="${esc(i.timeline||"")}">`)}
+            </div>`).join("") : `<div class="empty">No services yet. Add one below.</div>`}</div>
+          ${!ro && sugs.length ? `<div class="sugs"><span class="eyebrow">Often paired</span>${sugs.map(s=>`<button type="button" class="chip" data-pact="add-sug" data-sub="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>` : ""}
+          ${ro ? "" : `<div class="addrow"><select id="pe-addsel" aria-label="Add a service from the catalog"><option value="">Add from catalog…</option>${catOpts}</select><button type="button" class="btn" data-pact="add-cat">Add</button><button type="button" class="btn" data-pact="add-custom">Custom line</button></div>`}
+        </div>
+        <div class="panel"><div class="panel-h"><h2>Investment</h2></div>
+          <div class="grid">
+            ${pf("discountType","Discount type",`<select id="pe-discountType" data-f="discountType"><option value="$" ${p.discountType!=="%"?"selected":""}>Amount ($)</option><option value="%" ${p.discountType==="%"?"selected":""}>Percent (%)</option></select>`)}
+            ${pf("discount","Discount",`<input id="pe-discount" type="number" min="0" step="1" data-f="discount" value="${esc(p.discount||0)}">`)}
+          </div>
+          <div class="totals" id="pe-totals">${totalsHTML(p)}</div>
+        </div>
+        <div class="panel"><div class="panel-h"><h2>Timeline &amp; terms</h2></div><div class="grid">
+          ${pf("timeline","Timeline",ta("timeline",3),"full")}
+          ${pf("terms","Terms",ta("terms",4),"full")}
+        </div></div>
+      </form>
+      <div class="pe-preview"><span class="eyebrow">Client preview</span><div id="pe-doc">${docBody(p)}</div></div>
+    </div>`;
+  if(ro) document.querySelectorAll("#pe-form input,#pe-form select,#pe-form textarea").forEach(el=>el.disabled=true);
+  if(keepId && keepId.startsWith("pe-")){ const el=document.getElementById(keepId); if(el) el.focus(); }
+}
+function readProp(){
+  const p = S.prop; if(!p) return;
+  document.querySelectorAll("#pe-form [data-f]").forEach(el=>{ p[el.dataset.f] = el.type==="number" ? (el.value===""?0:Number(el.value)) : el.value; });
+  document.querySelectorAll("#pe-form [data-li]").forEach(el=>{
+    const it = p.lineItems[Number(el.dataset.li)], k = el.dataset.k; if(!it) return;
+    if(k==="deliverables") it[k] = el.value.split("\n").map(s=>s.trim()).filter(Boolean);
+    else if(el.type==="number") it[k] = el.value==="" ? 0 : Number(el.value);
+    else it[k] = el.value;
+  });
+}
+function onPropInput(e){
+  readProp(); S.propDirty = true;
+  if(e && e.target.dataset.k==="billing"){ const t=document.getElementById(e.target.id.replace("-billing","-term")); if(t) t.disabled = e.target.value!=="monthly"; }
+  $("#pe-doc").innerHTML = docBody(S.prop);
+  $("#pe-totals").innerHTML = totalsHTML(S.prop);
+  const m=$("#pe-msg"); if(m && m.classList.contains("ok")){ m.textContent=""; m.className="pe-msg"; }
+}
+function propMsg(t, ok){ const m=$("#pe-msg"); if(m){ m.textContent=t; m.className="pe-msg"+(ok?" ok":""); } }
+
+function docBody(p){
+  const l = leadOf(p)||{}, a = S.agency, c = calc(p), items = p.lineItems||[];
+  const cats = new Set(items.map(i=>i.category));
+  const access = ["your website","Google listing","Analytics and Search Console"].concat(cats.has("Paid Media")?["ads accounts"]:[], cats.has("Shopify")?["Shopify"]:[]);
+  const row = i => { const amt=(Number(i.price)||0)*(Number(i.qty)||1); const m=i.billing==="monthly";
+    return `<tr><td>${esc(i.name)}</td><td>${m?"Monthly":"One-time"}</td><td class="r">${fmtUSD(i.price)}${m?"/mo":""}</td><td class="r">${Number(i.qty)||1}</td><td class="r">${m?(Number(i.term)||1)+" mo":"—"}</td><td class="r">${fmtUSD(m?amt*(Number(i.term)||1):amt)}</td></tr>`; };
+  return `<div class="pdoc">
+    <div class="pd-top">
+      <div><div class="pd-agency">${esc(a.name||"")}</div>${a.contact?`<div class="pd-k" style="margin-top:3px;text-transform:none;letter-spacing:0;font-size:12.5px">${esc(a.contact)}</div>`:""}</div>
+      <div class="pd-meta">Proposal <b>${esc(p.number)}</b><br>Date <b>${fmtLong(p.sentDate||today())}</b>${p.validUntil?`<br>Valid until <b>${fmtLong(p.validUntil)}</b>`:""}</div>
+    </div>
+    <h1>${esc(p.title||"")}</h1>
+    <div class="pd-for">
+      <div><div class="pd-k">Prepared for</div><b>${esc(l.name||"")}</b>${l.company?"<br>"+esc(l.company):""}${l.city?"<br>"+esc(l.city):""}</div>
+      ${l.owner?`<div><div class="pd-k">Your contact</div>${esc(l.owner)}${a.name&&a.name!==DEFAULT_AGENCY.name?"<br>"+esc(a.name):""}</div>`:""}
+    </div>
+    ${p.needs?`<h2>Your situation</h2><p>${esc(p.needs)}</p>`:""}
+    ${p.goals?`<h2>Goals</h2><p>${esc(p.goals)}</p>`:""}
+    <h2>Recommended plan</h2>
+    ${p.approach?`<p>${esc(p.approach)}</p>`:""}
+    ${items.map(i=>`<div class="pd-item"><h3>${esc(i.name)}${i.timeline?`<span>${esc(i.timeline)}</span>`:""}</h3>${i.summary?`<p>${esc(i.summary)}</p>`:""}${(i.deliverables||[]).length?`<ul>${i.deliverables.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:""}</div>`).join("")}
+    <h2>Investment</h2>
+    <div class="pd-tbl"><table>
+      <thead><tr><th>Service</th><th>Billing</th><th class="r">Price</th><th class="r">Qty</th><th class="r">Term</th><th class="r">Total</th></tr></thead>
+      <tbody>${items.map(row).join("")}</tbody>
+      <tfoot>
+        ${c.one&&c.monTerm?`<tr><td colspan="5">One-time services</td><td class="r">${fmtUSD(c.one)}</td></tr><tr><td colspan="5">Monthly services (${fmtUSD(c.mon)}/mo) over minimum terms</td><td class="r">${fmtUSD(c.monTerm)}</td></tr>`:""}
+        ${c.disc?`<tr><td colspan="5">Discount${p.discountType==="%"?` (${Number(p.discount)}%)`:""}</td><td class="r">−${fmtUSD(c.disc)}</td></tr>`:""}
+        <tr class="pd-total"><td colspan="5">Total${c.monTerm?" for the first term":""}</td><td class="r">${fmtUSD(c.total)}</td></tr>
+      </tfoot>
+    </table></div>
+    ${p.timeline?`<h2>Timeline</h2><p>${esc(p.timeline)}</p>`:""}
+    <h2>Next steps</h2>
+    <ol><li>Approve this proposal by signing below or replying to our email.</li><li>We send the agreement and first invoice.</li><li>Kickoff call, and we get access to ${access.join(", ")}.</li><li>Baseline report and your 30/60/90-day plan within the first two weeks.</li></ol>
+    ${p.terms?`<h2>Terms</h2><p>${esc(p.terms)}</p>`:""}
+    <div class="pd-sign"><div>Accepted by (name and signature)</div><div>Date</div></div>
+    ${a.footer?`<div class="pd-foot">${esc(a.footer)}</div>`:""}
+  </div>`;
+}
+function standaloneDoc(p){
+  const css = [...document.styleSheets].flatMap(s=>{ try{ return [...s.cssRules]; }catch{ return []; } })
+    .map(r=>r.cssText).filter(t=>/(^|[\s,])\.pdoc\b/.test(t) || (t.startsWith("@media") && t.includes(".pdoc"))).join("\n");
+  const l = leadOf(p)||{};
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(p.title||"Proposal")}${l.company?" — "+esc(l.company):""}</title>
+<style>html,body{margin:0;background:#eef1ef;color-scheme:light}body{padding:24px 16px}${css}
+@media print{body{background:#fff;padding:0}.pdoc{box-shadow:none!important;margin:0 auto!important;max-width:none!important}.pdoc h2{break-after:avoid}.pdoc .pd-item,.pdoc tr{break-inside:avoid}}</style></head><body>${docBody(p)}</body></html>`;
+}
+
+async function saveProp(status){
+  readProp();
+  const p = S.prop;
+  if(propRO(p)) return;
+  if(!p.title.trim()) return propMsg("Add a proposal title.");
+  if(!p.lineItems.length) return propMsg("Add at least one service.");
+  const prevStatus = p.status;
+  if(status){ p.status = status; if(status==="Sent" && !p.sentDate) p.sentDate = today(); }
+  const doc = clone(p); delete doc.id; delete doc.example; delete doc.leadExample;
+  doc.updatedAt = new Date().toISOString();
+  document.querySelectorAll("[data-pact]").forEach(b=>b.disabled=true);
+  try{
+    await S.db.doc("proposals/"+p.id).set(doc);
+    p.updatedAt = doc.updatedAt;
+    if(status==="Sent") await syncLead(p, "sent");
+    if(status==="Accepted") await syncLead(p, "accepted");
+    S.propDirty = false;
+    if(status==="Declined"){ const lid=p.leadId; S.prop=null; renderProposals(); declineLead(lid); return; }
+    renderPropEditor();
+    propMsg(status==="Sent" ? "Marked sent. The lead moved to Proposal sent, with follow-ups on day 2, 5 and 10."
+      : status==="Accepted" ? "Marked accepted. The lead moved to Won; onboarding is in step 09 of the lead." : "Saved.", true);
+  }catch(e){
+    p.status = prevStatus;
+    renderPropEditor();
+    if(e && e.code==="invalid_argument"){ S.canWrite=false; propMsg("You don't have permission to change proposals here."); }
+    else propMsg("Couldn't save. Check your connection and try again.");
+  }
+}
+async function syncLead(p, kind){
+  const prev = leadOf(p); if(!prev || prev.example) return;
+  const c = calc(p);
+  const o = {...prev}; delete o.id;
+  o.proposalId = p.id; o.proposalValue = Math.round(c.total);
+  o.proposalScope = p.lineItems.map(i=>i.name).join(", ");
+  if(kind==="sent"){
+    if(o.proposalSent!==p.sentDate){ o.fu2=false; o.fu5=false; o.fu10=false; }
+    o.proposalSent = p.sentDate;
+    if(o.stage!=="Won") o.stage = "Proposal sent";
+  }
+  if(kind==="accepted"){ o.stage = "Won"; if(!o.wonDate) o.wonDate = today(); }
+  if(o.contacted===undefined) o.contacted = "";
+  if(o.nextFollowUp===undefined) o.nextFollowUp = "";
+  applyRules(o, prev);
+  o.updatedAt = new Date().toISOString();
+  for(const k in o) if(o[k]==="" || o[k]===null || o[k]===false || o[k]===undefined) delete o[k];
+  await S.db.doc("leads/"+prev.id).set(o);
+}
+function declineLead(lid){
+  if(!S.leads.find(l=>l.id===lid)) return;
+  openLead(lid);
+  const st = $("#f-stage"); if(st && !st.disabled) st.value = "Lost";
+  openStep(8); updateTagBox();
+  const lr = $("#f-lostReason"); if(lr) lr.focus();
+  const m = $("#d-msg"); if(m){ m.className="msg"; m.textContent = "Proposal marked declined. Pick a lost reason and save."; }
+}
+async function downloadProp(){
+  readProp();
+  const p = S.prop, l = leadOf(p)||{};
+  const name = `Proposal - ${l.company||l.name||"Client"} - ${p.sentDate||today()}.html`.replace(/[\\/:*?"<>|]+/g,"");
+  try{ await S.downloads.save({filename:name, data:standaloneDoc(p)}); propMsg("Downloaded. Open the file in a browser to save it as PDF.", true); }
+  catch(e){ if(e && e.code==="declined") return; if(e && e.code==="rate_limited") return propMsg("A download prompt is already open."); propMsg("Couldn't download the file here."); }
+}
+function switchView(v){
+  S.view = v;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.view===v));
+  document.querySelectorAll(".view").forEach(x=>x.hidden = x.id!=="view-"+v);
+  try{ localStorage.setItem("ld-view", v); }catch{}
+  S.settingsDirty = false;
+  render(); if(v==="proposals" && S.prop) renderPropEditor(); window.scrollTo(0,0);
+}
+function openProposal(id){
+  const p = propsList().find(x=>x.id===id); if(!p) return;
+  S.prop = clone(p); S.propDirty = false; closeDrawer(); switchView("proposals");
+}
+function startProposal(leadId){
+  const l = S.leads.find(x=>x.id===leadId); if(!l) return;
+  S.prop = newProposal(l); S.propDirty = true; closeDrawer(); switchView("proposals");
+  propMsg(propRO(S.prop) ? "Example lead. You can preview and download, but not save." : "Draft built from the lead's needs. Adjust it, then Save draft or Mark sent.", !propRO(S.prop));
+}
+function propBlock(l, isNew){
+  if(isNew) return "";
+  const ps = propsList().filter(p=>p.leadId===l.id);
+  return `<div class="field full"><span class="lab">Proposals for this lead</span><div class="plist">
+    ${ps.map(p=>`<button type="button" class="plink" data-pid="${esc(p.id)}"><span class="pst ps-${esc(p.status)}">${esc(p.status)}</span><span class="t">${esc(p.title)}</span><span class="mono">${money(calc(p).total)}</span></button>`).join("")}
+    <button type="button" class="btn small primary" data-pact="new-for" data-lead="${esc(l.id)}" style="justify-self:start">+ Create proposal from this lead</button>
+  </div></div>`;
+}
+let propArm = "";
+function propAction(act, el){
+  if(act==="new-for") return startProposal(el.dataset.lead);
+  if(act==="new-pick"){ const v=$("#pp-lead")?.value; if(!v){ $("#pp-lead")?.focus(); return; } return startProposal(v); }
+  if(act==="save-catalog") return saveCatalog();
+  const p = S.prop; if(!p) return;
+  if(act==="back"){
+    if(S.propDirty && !propRO(p) && propArm!=="back"){ propArm="back"; el.textContent="Discard changes?"; setTimeout(()=>{ propArm=""; if(el.isConnected) el.textContent="← All proposals"; }, 4000); return; }
+    propArm=""; S.prop=null; S.propDirty=false; renderProposals(); return;
+  }
+  if(act==="open-lead"){ if(leadOf(p)) openLead(p.leadId); return; }
+  if(act==="download") return downloadProp();
+  if(act==="save") return saveProp(null);
+  if(act==="sent") return saveProp("Sent");
+  if(act==="accepted") return saveProp("Accepted");
+  if(act==="declined") return saveProp("Declined");
+  if(act==="delete"){
+    if(propArm!=="delete"){ propArm="delete"; el.textContent="Confirm delete"; setTimeout(()=>{ propArm=""; if(el.isConnected) el.textContent="Delete"; }, 4000); return; }
+    propArm="";
+    S.db.doc("proposals/"+p.id).delete().then(()=>{ S.prop=null; renderProposals(); }).catch(()=>propMsg("Couldn't delete. Try again."));
+    return;
+  }
+  readProp();
+  if(act==="dup"){
+    const n = clone(p); n.id = S.db ? S.db.collection("proposals").doc().id : "local-"+Date.now();
+    n.status="Draft"; n.sentDate=""; n.createdAt=today(); delete n.updatedAt; n.validUntil=addDays(today(), Number(S.agency.validDays)||14);
+    n.number = p.number.replace(/-v\d+$/,"") + "-v" + (propsList().filter(x=>x.leadId===p.leadId).length+1);
+    n.title = p.title.replace(/ \(copy\)$/,"") + " (copy)";
+    S.prop = n; S.propDirty = true; renderPropEditor(); propMsg("Copy created as a new draft. Save it to keep it.", true); return;
+  }
+  const i = Number(el.dataset.i);
+  if(act==="up" && i>0) [p.lineItems[i-1], p.lineItems[i]] = [p.lineItems[i], p.lineItems[i-1]];
+  if(act==="down" && i<p.lineItems.length-1) [p.lineItems[i+1], p.lineItems[i]] = [p.lineItems[i], p.lineItems[i+1]];
+  if(act==="remove") p.lineItems.splice(i,1);
+  const add = s => { const it=catItem(s); if(it){ p.lineItems.push(it); if(it.timeline && !(p.timeline||"").includes(s)) p.timeline = ((p.timeline?p.timeline+"\n":"") + `${s}: ${it.timeline}`); } };
+  if(act==="add-sug") add(el.dataset.sub);
+  if(act==="add-cat"){ const v=$("#pe-addsel")?.value; if(!v) return; add(v); }
+  if(act==="add-custom") p.lineItems.push({name:"Custom service", category:"", summary:"", deliverables:[], price:0, billing:"one-time", term:1, qty:1, timeline:""});
+  S.propDirty = true; renderPropEditor();
+  if(act==="add-custom"){ const el2=document.getElementById(`pe-li${p.lineItems.length-1}-name`); if(el2){ el2.focus(); el2.select(); } }
+}
+
+/* ---------- Settings: catalog ---------- */
+function catalogHTML(){
+  const dis = (!S.canWrite || !S.db) ? "disabled" : "";
+  const a = S.agency;
+  return `
+    <div class="panel"><div class="panel-h"><h2>Service catalog</h2><span class="rule">Rates and scope that proposals start from</span></div>
+      ${S.catalogSaved ? "" : `<div class="insight" style="border-top:0"><b style="color:var(--warm)">Placeholder prices.</b> Set your real rates for each service and save.</div>`}
+      <div class="catwrap">${CATEGORIES.map((c,ci)=>`<details class="step"><summary><h3>${esc(c)}</h3><span class="hint">${SUBS[c].map(s=>esc(s)).join(" · ")}</span></summary>
+        ${SUBS[c].map((s,si)=>{ const it=S.catalog[s]||DEFAULT_CATALOG[s]; const id=k=>`cs-${ci}-${si}-${k}`;
+          return `<div class="cat-item" data-cs="${esc(s)}"><b>${esc(s)}</b>
+            <div class="grid4">
+              <div class="field"><label for="${id("price")}">Price (USD)</label><input id="${id("price")}" data-k="price" type="number" min="0" step="50" value="${esc(it.price)}" ${dis}></div>
+              <div class="field"><label for="${id("billing")}">Billing</label><select id="${id("billing")}" data-k="billing" ${dis}><option value="one-time" ${it.billing!=="monthly"?"selected":""}>One-time</option><option value="monthly" ${it.billing==="monthly"?"selected":""}>Monthly</option></select></div>
+              <div class="field"><label for="${id("term")}">Min. months</label><input id="${id("term")}" data-k="term" type="number" min="1" step="1" value="${esc(it.term)}" ${dis}></div>
+              <div class="field"><label for="${id("timeline")}">Timeline</label><input id="${id("timeline")}" data-k="timeline" value="${esc(it.timeline)}" ${dis}></div>
+            </div>
+            <div class="grid2">
+              <div class="field"><label for="${id("summary")}">What it does</label><textarea id="${id("summary")}" data-k="summary" rows="3" ${dis}>${esc(it.summary)}</textarea></div>
+              <div class="field"><label for="${id("deliverables")}">Deliverables (one per line)</label><textarea id="${id("deliverables")}" data-k="deliverables" rows="3" ${dis}>${esc((it.deliverables||[]).join("\n"))}</textarea></div>
+            </div></div>`; }).join("")}
+      </details>`).join("")}</div>
+      <div class="panel-h" style="border-top:1px solid var(--line)"><h2>Agency details</h2><span class="rule">Shown on every proposal</span></div>
+      <div class="grid" style="padding-top:12px">
+        <div class="field"><label for="ag-name">Agency name</label><input id="ag-name" data-ag="name" value="${esc(a.name)}" ${dis}></div>
+        <div class="field"><label for="ag-contact">Contact line</label><input id="ag-contact" data-ag="contact" value="${esc(a.contact)}" placeholder="Email · phone · website" ${dis}></div>
+        <div class="field"><label for="ag-validDays">Proposals valid for (days)</label><input id="ag-validDays" data-ag="validDays" type="number" min="1" value="${esc(a.validDays)}" ${dis}></div>
+        <div class="field"><label for="ag-footer">Footer</label><input id="ag-footer" data-ag="footer" value="${esc(a.footer)}" placeholder="Company address, registration…" ${dis}></div>
+        <div class="field full"><label for="ag-paymentTerms">Default terms</label><textarea id="ag-paymentTerms" data-ag="paymentTerms" rows="4" ${dis}>${esc(a.paymentTerms)}</textarea></div>
+      </div>
+      <div class="d-foot" style="border-radius:0 0 var(--r) var(--r)"><span class="msg" id="cat-msg"></span><button class="btn primary" type="button" data-pact="save-catalog" ${dis}>Save catalog &amp; agency details</button></div>
+    </div>`;
+}
+async function saveCatalog(){
+  const m = $("#cat-msg"); m.className = "msg";
+  const items = {};
+  document.querySelectorAll("[data-cs]").forEach(box=>{
+    const s = box.dataset.cs, g = k => box.querySelector(`[data-k="${k}"]`).value;
+    items[s] = {category: DEFAULT_CATALOG[s]?.category || "", price:Number(g("price"))||0, billing:g("billing"), term:Math.max(1,Number(g("term"))||1), timeline:g("timeline").trim(), summary:g("summary").trim(), deliverables:g("deliverables").split("\n").map(x=>x.trim()).filter(Boolean)};
+  });
+  const agency = {};
+  document.querySelectorAll("[data-ag]").forEach(el=>agency[el.dataset.ag] = el.type==="number" ? (Number(el.value)||14) : el.value.trim());
+  try{ await S.db.doc("config/catalog").set({items, agency, updatedAt:new Date().toISOString()}); m.className="msg ok"; m.textContent="Saved. New proposals use these rates."; }
+  catch(e){ m.textContent = e && e.code==="invalid_argument" ? "You don't have permission to change the catalog." : "Couldn't save. Try again."; }
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e=>{
+  const tab = e.target.closest(".tab");
+  if(tab){ switchView(tab.dataset.view); return; }
+  const propRow = e.target.closest("[data-prop]");
+  if(propRow){ openProposal(propRow.dataset.prop); return; }
+  const pidEl = e.target.closest("[data-pid]");
+  if(pidEl){ openProposal(pidEl.dataset.pid); return; }
+  const pact = e.target.closest("[data-pact]");
+  if(pact){ if(!pact.disabled) propAction(pact.dataset.pact, pact); return; }
+  const pchip = e.target.closest(".chip[data-pstatus]");
+  if(pchip){ S.propFilter = pchip.dataset.pstatus; renderPropList(); return; }
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if(act==="new"){ openLead(null); return; }
+  if(act==="close"){ closeDrawer(); return; }
+  if(act==="save"){ saveLead(); return; }
+  if(act==="delete"){ deleteLead(e.target.closest("[data-act]")); return; }
+  if(e.target.id==="btn-new"){ openLead(null); return; }
+  if(e.target.id==="backdrop"){ closeDrawer(); return; }
+  const chip = e.target.closest(".chip[data-stage]");
+  if(chip){ S.filter.stage = chip.dataset.stage; renderPipeline(); return; }
+  const th = e.target.closest("th[data-sort]");
+  if(th){ const k=th.dataset.sort; S.sort = {key:k, dir: S.sort.key===k ? -S.sort.dir : 1}; renderPipeline(); return; }
+  if(e.target.id==="rt-save"){ saveRouting(); return; }
+  const row = e.target.closest("[data-id]");
+  if(row && !e.target.closest("#drawer")){ openLead(row.dataset.id); }
+});
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape" && !$("#drawer").hidden){ closeDrawer(); return; }
+  if(e.key==="Enter" && e.target.matches("[data-prop]")){ openProposal(e.target.dataset.prop); return; }
+  if(e.key==="Enter" && e.target.matches("tr[data-pid]")){ openProposal(e.target.dataset.pid); return; }
+  if(e.key==="Enter" && e.target.matches("[data-id]")) openLead(e.target.dataset.id);
+});
+document.addEventListener("input", e=>{
+  if(e.target.closest("#pe-form")){ onPropInput(e); return; }
+  if(e.target.closest("#view-routing")){ S.settingsDirty = true; return; }
+  if(e.target.id==="f-q"){ S.filter.q = e.target.value; renderPipeline(); }
+});
+document.addEventListener("change", e=>{
+  const id = e.target.id;
+  if(e.target.closest("#pe-form")){ onPropInput(e); return; }
+  if(e.target.closest("#view-routing")){ S.settingsDirty = true; return; }
+  if(["f-tag","f-category","f-owner","f-source"].includes(id) && e.target.closest("#view-pipeline")){ S.filter[id.slice(2)] = e.target.value; renderPipeline(); return; }
+  if(id==="f-period"){ S.period = e.target.value; renderReview(); return; }
+  if(e.target.closest("#drawer")){
+    if(id==="f-category") updateSubList();
+    updateTagBox();
+  }
+});
+
+async function saveRouting(){
+  const m = $("#rt-msg"); m.className="msg";
+  const owners = {}; document.querySelectorAll("#view-routing input[data-cat]").forEach(i=>owners[i.dataset.cat]=i.value.trim());
+  try{ await S.db.doc("config/routing").set({owners, updatedAt:new Date().toISOString()}); m.className="msg ok"; m.textContent="Saved. New leads route to these owners."; }
+  catch(e){ m.textContent = e && e.code==="invalid_argument" ? "You don't have permission to change routing." : "Couldn't save. Try again."; }
+}
+
+/* ---------- data ---------- */
+try{ const v = localStorage.getItem("ld-view"); if(v && document.querySelector(`.tab[data-view="${v}"]`)) document.querySelector(`.tab[data-view="${v}"]`).click(); }catch{}
+render();
+
+(async ()=>{
+  if(window.claude?.use) window.claude.use("downloads").then(d=>{ S.downloads = d; if(S.view==="proposals" && S.prop){ readProp(); renderPropEditor(); } }).catch(()=>{});
+  const db = window.claude?.use ? await window.claude.use("db") : null;
+  S.connecting = false;
+  if(!db){ render(); return; }
+  S.db = db;
+  const timer = setTimeout(()=>{ if(!S.live){ const b=$("#banner"); b.hidden=false; b.innerHTML=`<span><b>Can't reach saved leads yet.</b> Showing examples until the connection comes back.</span>`; } }, 10000);
+  db.collection("leads").onSnapshot(snap=>{
+    if(!snap.metadata.fromCache){ S.live = true; clearTimeout(timer); }
+    const real = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if(real.length){ S.leads = real; S.preview = false; }
+    else if(!snap.metadata.fromCache){ S.leads = samples(); S.preview = true; }
+    render();
+    if(S.editing && !S.editing.isNew && !S.leads.find(x=>x.id===S.editing.id)) closeDrawer();
+  }, err=>{ clearTimeout(timer); S.db = null; render(); });
+  db.collection("proposals").onSnapshot(snap=>{
+    S.realProposals = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, ()=>{});
+  db.doc("config/catalog").onSnapshot(snap=>{
+    if(!snap.exists) return;
+    const d = snap.data();
+    S.catalog = {...clone(DEFAULT_CATALOG), ...(d.items||{})};
+    S.agency = {...DEFAULT_AGENCY, ...(d.agency||{})};
+    S.catalogSaved = true;
+    render();
+  }, ()=>{});
+  db.doc("config/routing").onSnapshot(snap=>{
+    if(snap.exists){ const o = snap.data().owners || {}; S.routing = {...S.routing, ...o}; S.routingSaved = true; if(S.view==="routing" && !S.settingsDirty) renderRouting(); fillDatalists(); }
+  }, ()=>{});
+  try{
+    const user = await window.claude.use("user");
+    if(user){ const c = await user.can("data.write"); if(c===false){ S.canWrite = false; render(); } }
+  }catch{}
+})();
+})();
+</script>
+
+</body></html>

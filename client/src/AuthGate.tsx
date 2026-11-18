@@ -4,6 +4,12 @@ import type { User } from "./types";
 import { Login } from "./components/Login";
 import App from "./App";
 
+/** After sign-in, go back to the Leads page if that's where the person came from. */
+function nextPath(): string | null {
+  const n = new URLSearchParams(location.search).get("next");
+  return n && /^\/leads\/?$/.test(n) ? n : null;
+}
+
 type State = { status: "checking" } | { status: "signed-out"; notice?: string } | { status: "signed-in"; user: User } | { status: "error"; message: string };
 
 export default function AuthGate() {
@@ -11,7 +17,12 @@ export default function AuthGate() {
 
   const check = useCallback(async () => {
     setState({ status: "checking" });
-    try { setState({ status: "signed-in", user: await api.me() }); }
+    try {
+      const user = await api.me();
+      const next = nextPath();
+      if (next) { location.replace(next); return; }
+      setState({ status: "signed-in", user });
+    }
     catch (e) {
       if (e instanceof ApiError && e.status === 401) setState({ status: "signed-out" });
       else setState({ status: "error", message: (e as Error).message });
@@ -43,7 +54,10 @@ export default function AuthGate() {
           </div></main></>
       );
     case "signed-out":
-      return <Login notice={state.notice} onSignedIn={(user) => setState({ status: "signed-in", user })} />;
+      return <Login notice={state.notice} onSignedIn={(user) => {
+        const next = nextPath();
+        if (next) location.replace(next); else setState({ status: "signed-in", user });
+      }} />;
     case "signed-in":
       return <App user={state.user} onSignOut={signOut} onUserChange={(user) => setState({ status: "signed-in", user })} />;
   }

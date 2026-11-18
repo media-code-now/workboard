@@ -431,3 +431,9 @@ img { max-width: 100%; }
 .frow input.switch:checked { background: var(--green); }
 .nt-sheet .nt-head b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .nt-sheet .nt-head { justify-content: flex-end; padding: 0 8px 4px; min-height: 0; }
+
+/* Leads link */
+a.capsule { text-decoration: none; color: inherit; }
+a.mrow { text-decoration: none; color: inherit; }
+.mrow-sub { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--label-2); }
+@media (max-width: 640px) { .nav .acts .leads-link { display: none; } }

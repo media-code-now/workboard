@@ -116,6 +116,9 @@ export default function App({ user, onSignOut, onUserChange }: { user: User; onS
           </div>
           <div className="acts">
             <span className={"sync glass " + (connection === "live" ? "live" : "warn")} role="status">{syncLabel}</span>
+            <a className="capsule glass leads-link" href="/leads/" aria-label="Leads">
+              <Icon name="leads" /><span className="label-txt">Leads</span>
+            </a>
             <button className="capsule glass" type="button" onClick={newProject} aria-label="New project">
               <Icon name="folder" /><span className="label-txt">Project</span>
             </button>

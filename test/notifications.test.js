@@ -128,3 +128,21 @@ test("an older database is upgraded to the current schema", async () => {
   assert.equal(users[0].n, 2, "existing data is kept");
   assert.equal((await call("ben", "GET", "/notifications")).status, 200, "notifications table is back");
 });
+
+test("Leads documents: save, list, update, delete; only known collections; revision moves", async () => {
+  const rev0 = (await call("ana", "GET", "/revision")).body.rev;
+  assert.equal((await call("ana", "PUT", "/docs/leads/abc123", { name: "Yaron", stage: "New" })).status, 204);
+  assert.deepEqual((await call("ben", "GET", "/docs/leads")).body, [{ id: "abc123", data: { name: "Yaron", stage: "New" } }]);
+  await call("ben", "PUT", "/docs/leads/abc123", { name: "Yaron", stage: "Contacted" });
+  assert.equal((await call("ana", "GET", "/docs/leads")).body[0].data.stage, "Contacted");
+  await call("ana", "PUT", "/docs/config/routing", { owners: { SEO: "Noam" } });
+  assert.equal((await call("ana", "GET", "/docs/config")).body[0].id, "routing");
+  assert.ok((await call("ana", "GET", "/revision")).body.rev > rev0);
+  assert.equal((await call("ana", "GET", "/docs/secrets")).status, 400);
+  assert.equal((await call("ana", "PUT", "/docs/leads/bad%20id", { a: 1 })).status, 400);
+  assert.equal((await call("ana", "PUT", "/docs/leads/x1", [1, 2])).status, 400);
+  assert.equal((await call("ana", "DELETE", "/docs/leads/abc123")).status, 204);
+  assert.equal((await call("ana", "DELETE", "/docs/leads/abc123")).status, 404);
+  const anon = await fetch(base + "/docs/leads");
+  assert.equal(anon.status, 401, "requires sign-in");
+});
