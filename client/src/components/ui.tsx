@@ -18,6 +18,9 @@ const PATHS = {
   menu: <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" />,
   list: <path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01" />,
   timeline: <><path d="M2.5 3.5v9h11" /><path d="M5 6h4M7 9h5" /></>,
+  bell: <><path d="M4 11.5V7.5a4 4 0 0 1 8 0v4l1 1H3z" /><path d="M6.5 13.5a1.6 1.6 0 0 0 3 0" /></>,
+  gear: <><circle cx="8" cy="8" r="2.2" /><path d="M8 1.8v1.6M8 12.6v1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M1.8 8h1.6M12.6 8h1.6M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1" /></>,
+  arrow: <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />,
 };
 export type IconName = keyof typeof PATHS;
 

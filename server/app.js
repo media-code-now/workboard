@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { SESSION_COOKIE, generatePassword, parseCookies } from "./auth.js";
 import { ValidationError } from "./store.js";
 import { redactSecrets } from "./sql.js";
+import { createNotifications } from "./notifications.js";
 
 /**
  * @param store  projects/tasks from createStore()
@@ -11,7 +12,7 @@ import { redactSecrets } from "./sql.js";
  * @param opts.staticDir      built frontend to serve (local production server only)
  * @param opts.secureCookies  mark the session cookie Secure (set when served over HTTPS)
  */
-export function createApp(store, auth, { staticDir, secureCookies = false } = {}) {
+export function createApp(store, auth, { staticDir, secureCookies = false, notifications = createNotifications(auth.sql) } = {}) {
   const app = express();
   app.disable("x-powered-by");
 
@@ -83,6 +84,30 @@ export function createApp(store, auth, { staticDir, secureCookies = false } = {}
     res.status(204).end();
   });
 
+  // ---- settings ----
+  app.get("/api/settings", async (req, res) => {
+    res.json({ name: req.user.name, email: req.user.email, role: req.user.role, prefs: await notifications.getPrefs(req.user.id) });
+  });
+  app.patch("/api/settings", async (req, res) => {
+    const { name, prefs } = req.body ?? {};
+    let user = req.user;
+    if (name !== undefined && name !== user.name) user = await auth.rename(user.id, name);
+    const nextPrefs = prefs !== undefined ? await notifications.setPrefs(user.id, prefs) : await notifications.getPrefs(user.id);
+    res.json({ name: user.name, email: user.email, role: user.role, prefs: nextPrefs });
+  });
+  app.get("/api/team", async (_req, res) => res.json(await auth.listTeam()));
+
+  // ---- notifications ----
+  const todayParam = (req) => (typeof req.query.today === "string" ? req.query.today : "");
+  app.get("/api/notifications", async (req, res) => {
+    await notifications.ensureDueReminders(req.user, todayParam(req), { force: true });
+    res.json(await notifications.list(req.user.id, Number(req.query.limit) || 50));
+  });
+  app.post("/api/notifications/read", async (req, res) => {
+    const { ids, all } = req.body ?? {};
+    res.json({ unread: await notifications.markRead(req.user.id, { ids, all: all === true }) });
+  });
+
   // ---- team (admins only) ----
   const adminOnly = (req, res, next) => (req.user.role === "admin" ? next() : res.status(403).json({ error: "Only admins can manage the team." }));
   app.get("/api/users", adminOnly, async (_req, res) => res.json(await auth.listUsers()));
@@ -110,7 +135,12 @@ export function createApp(store, auth, { staticDir, secureCookies = false } = {}
 
   // ---- board ----
   // Browsers poll this every few seconds; it's one tiny query.
-  app.get("/api/revision", async (_req, res) => res.json({ rev: await store.revision() }));
+  // It also carries this person's unread notification count (and creates due reminders now and then).
+  app.get("/api/revision", async (req, res) => {
+    await notifications.ensureDueReminders(req.user, todayParam(req));
+    const [rev, unread] = await Promise.all([store.revision(), notifications.unreadCount(req.user.id)]);
+    res.json({ rev, unread });
+  });
   app.get("/api/board", async (_req, res) => {
     const [rev, projects, tasks] = await Promise.all([store.revision(), store.listProjects(), store.listTasks()]);
     res.json({ rev, projects, tasks });
@@ -125,10 +155,24 @@ export function createApp(store, auth, { staticDir, secureCookies = false } = {}
     return (await store.deleteProject(req.params.id)) ? res.status(204).end() : res.status(404).json({ error: "Project not found" });
   });
 
-  app.post("/api/tasks", async (req, res) => res.status(201).json(await store.createTask(req.body ?? {})));
+  // Notifications are best-effort: a failure there must never fail the change itself.
+  const notifyChange = async (actor, before, after) => {
+    try {
+      const project = after?.projectId ? await store.getProject(after.projectId) : null;
+      await notifications.onTaskChange(actor, before, after, project);
+    } catch (e) { console.error("Notification failed:", redactSecrets(e?.message || e)); }
+  };
+  app.post("/api/tasks", async (req, res) => {
+    const task = await store.createTask(req.body ?? {});
+    await notifyChange(req.user, null, task);
+    res.status(201).json(task);
+  });
   app.patch("/api/tasks/:id", async (req, res) => {
-    const task = await store.updateTask(req.params.id, req.body ?? {});
-    return task ? res.json(task) : res.status(404).json({ error: "Task not found" });
+    const before = await store.getTask(req.params.id);
+    const task = before && (await store.updateTask(req.params.id, req.body ?? {}));
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    await notifyChange(req.user, before, task);
+    res.json(task);
   });
   app.delete("/api/tasks/:id", async (req, res) => {
     return (await store.deleteTask(req.params.id)) ? res.status(204).end() : res.status(404).json({ error: "Task not found" });

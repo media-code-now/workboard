@@ -63,6 +63,7 @@ export function createAuth(sql) {
   const one = async (text, params) => (await sql.query(text, params))[0];
 
   const auth = {
+    sql,
     async userCount() { return Number((await one("SELECT COUNT(*)::int AS n FROM users")).n); },
     async listUsers() { return (await sql.query("SELECT * FROM users ORDER BY created_at")).map(publicUser); },
     async getUser(id) { return publicUser(await one("SELECT * FROM users WHERE id = $1", [id])); },
@@ -92,6 +93,26 @@ export function createAuth(sql) {
       const row = await one("SELECT password_hash FROM users WHERE id = $1", [userId]);
       if (!row || !(await verifyPassword(String(current ?? ""), row.password_hash))) throw new ValidationError("Your current password is incorrect");
       await this.setPassword(userId, next, keepToken);
+    },
+    /** Everyone's id and name, for assignee suggestions. */
+    async listTeam() { return sql.query("SELECT id, name FROM users ORDER BY lower(name)"); },
+    /**
+     * Changes a user's display name. Tasks and projects that named them by the old name
+     * are updated too, so assignments and notifications keep working.
+     */
+    async rename(userId, name) {
+      name = String(name ?? "").trim();
+      if (!name) throw new ValidationError("Name is required");
+      if (name.length > 80) throw new ValidationError("Name must be at most 80 characters");
+      const before = await one("SELECT name FROM users WHERE id = $1", [userId]);
+      if (!before) return null;
+      await sql.query("UPDATE users SET name = $1 WHERE id = $2", [name, userId]);
+      if (before.name !== name) {
+        const t = await sql.query("UPDATE tasks SET assignee = $1 WHERE lower(assignee) = lower($2) RETURNING id", [name, before.name]);
+        const p = await sql.query("UPDATE projects SET owner = $1 WHERE lower(owner) = lower($2) RETURNING id", [name, before.name]);
+        if (t.length || p.length) await sql.query("UPDATE meta SET value = value + 1 WHERE key = 'rev'");
+      }
+      return this.getUser(userId);
     },
     async removeUser(userId) { return (await sql.query("DELETE FROM users WHERE id = $1 RETURNING id", [userId])).length > 0; },
     async adminCount() { return Number((await one("SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin'")).n); },

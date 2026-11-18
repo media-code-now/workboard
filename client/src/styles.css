@@ -385,3 +385,49 @@ img { max-width: 100%; }
 .mini { border: 0; background: var(--fill-2); border-radius: 99px; padding: 6px 11px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .mini.danger { color: var(--red); }
 .mini:disabled { opacity: .5; }
+
+/* ---------- Notifications ---------- */
+.bell-wrap { position: relative; }
+.bell { position: relative; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.bell svg { width: 19px; height: 19px; }
+.bell .badge { position: absolute; top: -3px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--wall-base); }
+.nt-pop { position: absolute; right: 0; top: calc(100% + 8px); width: min(380px, calc(100vw - 32px)); max-height: min(70vh, 560px); overflow: auto; border-radius: 22px; padding: 10px; z-index: 20; background: var(--glass-strong); }
+.nt-head { display: flex; align-items: baseline; justify-content: space-between; padding: 6px 8px 8px; gap: 8px; }
+.nt-head b { font-size: 17px; font-weight: 700; }
+.nt-sheet .nt-head { padding-top: 0; }
+.nt-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.nt-item { width: 100%; display: flex; align-items: flex-start; gap: 12px; padding: 10px 8px; border: 0; background: transparent; border-radius: 14px; text-align: left; cursor: pointer; }
+.nt-item:hover { background: var(--fill); }
+.nt-ico { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: #fff; flex: none; }
+.nt-ico svg { width: 16px; height: 16px; }
+.nt-txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.nt-title { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; color: var(--label-2); }
+.nt-item.unread .nt-title { color: var(--label); font-weight: 600; }
+.nt-meta { font-size: 12px; color: var(--label-2); }
+.nt-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--blue); flex: none; margin-top: 6px; }
+.nt-empty { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 22px 12px; color: var(--label-2); font-size: 14px; }
+.nt-empty b { color: var(--label); font-size: 16px; }
+.nt-empty-ico { width: 44px; height: 44px; border-radius: 14px; background: var(--fill); display: grid; place-items: center; color: var(--label-2); }
+.nt-empty-ico svg { width: 22px; height: 22px; }
+
+/* ---------- Settings ---------- */
+.toggle-row { justify-content: space-between; cursor: pointer; padding-block: 10px; }
+.tg-txt { display: grid; gap: 1px; min-width: 0; }
+.tg-txt small { color: var(--label-2); font-size: 12px; }
+.switch { appearance: none; -webkit-appearance: none; flex: none; width: 51px; height: 31px; border-radius: 99px; background: var(--fill-2); position: relative; cursor: pointer; transition: background .2s; margin: 0; padding: 0; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .2s; }
+.switch:checked { background: var(--green); }
+.switch:checked::after { transform: translateX(20px); }
+.switch:disabled { opacity: .45; cursor: not-allowed; }
+.switch:focus-visible { outline: 3px solid color-mix(in srgb, var(--blue) 60%, transparent); outline-offset: 2px; }
+.theme-chip { width: 34px; height: 24px; border-radius: 7px; border: 1px solid var(--sep); }
+.theme-chip.light { background: #f2f3f7; }
+.theme-chip.dark { background: #1c1c20; }
+.theme-chip.system { background: linear-gradient(135deg, #f2f3f7 50%, #1c1c20 50%); }
+.frow input[readonly] { color: var(--label-3); }
+@media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
+/* the general `.frow input` rule must not stretch switches */
+.frow input.switch { flex: none; width: 51px; height: 31px; padding: 0; text-align: initial; background: var(--fill-2); }
+.frow input.switch:checked { background: var(--green); }
+.nt-sheet .nt-head b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.nt-sheet .nt-head { justify-content: flex-end; padding: 0 8px 4px; min-height: 0; }

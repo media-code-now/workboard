@@ -7,6 +7,8 @@ A projects and tasks dashboard for the whole company. Everyone sees the same boa
 - **Tasks**: Board (drag between To Do, In Progress, Review, Done), List (tap to complete) and Timeline views, with search and filters by person and priority
 - **Phones**: floating tab bar (Overview, Projects, Tasks, Menu) and a + button
 - **Team**: admins add people, reset passwords and remove accounts from inside the app
+- **Notifications**: a bell with unread count for tasks assigned to you, changes to your tasks, and due-date reminders (tomorrow, today, overdue), plus optional desktop alerts
+- **Settings**: your name, which notifications you get, desktop alerts, appearance (System / Light / Dark), password
 
 Built with React + TypeScript (Vite) and an Express API on Postgres. The database is **Neon** (project `young-sun-92051793`, branch `production`, configured in `neon.ts`). The app runs on **Netlify** (static site + one Netlify Function) or anywhere Node runs.
 
@@ -121,9 +123,19 @@ When self-hosting, serve over HTTPS and set `SECURE_COOKIES=true`; behind a reve
 | `npm test` | API tests (in-memory Postgres) |
 | `npm run typecheck` | TypeScript checks |
 
+## How notifications work
+
+People are matched to tasks by **name**: a task notifies the account whose name matches its assignee (ignoring case), and the assignee field suggests team members' names. Renaming yourself in Settings also renames you on existing tasks and projects.
+
+- **Assigned to me**: someone else sets you as a task's assignee.
+- **Changes to my tasks**: someone else moves a task you're assigned to another column.
+- **Due-date reminders**: created for your open tasks due tomorrow, today, or overdue, once each.
+
+You never get notified about your own changes. Each person turns types on or off in Settings, and read notifications are kept for 60 days. Desktop alerts are per device and need the browser's permission.
+
 ## How syncing works
 
-Each browser asks `/api/revision` every 4 seconds while the tab is visible. That returns one number that goes up on every change; the browser reloads the board only when it moved. This works on serverless hosting, where long-lived connections aren't available.
+Each browser asks `/api/revision` every 4 seconds while the tab is visible (every 30 seconds in the background). That returns one number that goes up on every change, plus your unread notification count; the browser reloads the board only when the number moved. This works on serverless hosting, where long-lived connections aren't available.
 
 ## API
 
@@ -135,7 +147,11 @@ All endpoints are JSON under `/api`. Everything except `/auth/login` and `/healt
 | POST | `/auth/logout` | Ends the session |
 | GET | `/auth/me` | The signed-in user |
 | POST | `/auth/password` | Change your password: `{ currentPassword, newPassword }` |
-| GET | `/revision` | Change counter for syncing |
+| GET | `/revision?today=YYYY-MM-DD` | Change counter for syncing, plus your unread count |
+| GET | `/notifications?today=YYYY-MM-DD` | Your latest notifications (creates due reminders) |
+| POST | `/notifications/read` | Mark `{ ids: [...] }` or `{ all: true }` as read |
+| GET / PATCH | `/settings` | Your name and notification preferences |
+| GET | `/team` | Everyone's name (for assignee suggestions) |
 | GET | `/board` | All projects and tasks |
 | POST | `/projects`, `/tasks` | Create |
 | PATCH / DELETE | `/projects/:id`, `/tasks/:id` | Update (partial) / delete; deleting a project keeps its tasks |

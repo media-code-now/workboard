@@ -142,7 +142,7 @@ export function TeamSheet({ open, me, onClose }: { open: boolean; me: User; onCl
 }
 
 /** Desktop avatar button with the account popover. */
-export function AccountMenu({ user, onPassword, onTeam, onSignOut }: { user: User; onPassword: () => void; onTeam: () => void; onSignOut: () => void }) {
+export function AccountMenu({ user, onSettings, onTeam, onSignOut }: { user: User; onSettings: () => void; onTeam: () => void; onSignOut: () => void }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
@@ -161,8 +161,8 @@ export function AccountMenu({ user, onPassword, onTeam, onSignOut }: { user: Use
       {open && (
         <div className="account-pop glass" role="menu">
           <div className="who"><Avatar name={user.name} /><div><b>{user.name}</b><small>{user.email}</small></div></div>
+          <button type="button" role="menuitem" className="pop-item" onClick={pick(onSettings)}>Settings</button>
           {user.role === "admin" && <button type="button" role="menuitem" className="pop-item" onClick={pick(onTeam)}>Team</button>}
-          <button type="button" role="menuitem" className="pop-item" onClick={pick(onPassword)}>Change Password</button>
           <button type="button" role="menuitem" className="signout" onClick={pick(onSignOut)}>Sign Out</button>
         </div>
       )}

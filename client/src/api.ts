@@ -1,4 +1,5 @@
-import type { Project, ProjectInput, Task, TaskInput, User } from "./types";
+import type { AppNotification, NotificationPrefs, Project, ProjectInput, Settings, Task, TaskInput, User } from "./types";
+import { today } from "./lib";
 
 export class ApiError extends Error {
   constructor(message: string, public status = 0) { super(message); }
@@ -36,7 +37,12 @@ export const api = {
   login: (email: string, password: string) => request<User>("POST", "/auth/login", { email, password }),
   logout: () => request<void>("POST", "/auth/logout", {}),
   changePassword: (currentPassword: string, newPassword: string) => request<void>("POST", "/auth/password", { currentPassword, newPassword }),
-  revision: () => request<{ rev: number }>("GET", "/revision"),
+  revision: () => request<{ rev: number; unread: number }>("GET", `/revision?today=${today()}`),
+  notifications: () => request<{ unread: number; items: AppNotification[] }>("GET", `/notifications?today=${today()}`),
+  markRead: (opts: { ids?: string[]; all?: boolean }) => request<{ unread: number }>("POST", "/notifications/read", opts),
+  settings: () => request<Settings>("GET", "/settings"),
+  updateSettings: (s: { name?: string; prefs?: Partial<NotificationPrefs> }) => request<Settings>("PATCH", "/settings", s),
+  team: () => request<{ id: string; name: string }[]>("GET", "/team"),
   board: () => request<{ rev: number; projects: Project[]; tasks: Task[] }>("GET", "/board"),
   listUsers: () => request<User[]>("GET", "/users"),
   addUser: (u: { email: string; name: string; role: User["role"] }) => request<{ user: User; temporaryPassword: string }>("POST", "/users", u),

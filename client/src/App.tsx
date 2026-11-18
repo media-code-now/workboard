@@ -8,6 +8,8 @@ import { BoardView, ListView, TimelineView } from "./components/TaskViews";
 import { ProjectSheet, TaskSheet } from "./components/Sheets";
 import { Icon } from "./components/ui";
 import { AccountMenu, PasswordSheet, TeamSheet } from "./components/Account";
+import { NotificationBell, useNotifications } from "./components/Notifications";
+import { SettingsSheet } from "./components/Settings";
 import { MenuSheet, TabBar, type MobileTab } from "./components/MobileNav";
 import { useMediaQuery } from "./useMediaQuery";
 import { today } from "./lib";
@@ -17,7 +19,7 @@ const readView = (): View => {
   return "board";
 };
 
-export default function App({ user, onSignOut }: { user: User; onSignOut: () => void }) {
+export default function App({ user, onSignOut, onUserChange }: { user: User; onSignOut: () => void; onUserChange: (u: User) => void }) {
   const board = useBoard();
   const { projects, tasks, loaded, loadError, connection } = board;
 
@@ -35,6 +37,10 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
   const [menuOpen, setMenuOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [team, setTeam] = useState<string[]>([]);
+  const notes = useNotifications(board.unread, board.setUnread);
+  useEffect(() => { api.team().then((t) => setTeam(t.map((u) => u.name))).catch(() => {}); }, [user.name, teamOpen]);
   const goTab = (t: MobileTab) => { setMenuOpen(false); setMobileTab(t); window.scrollTo({ top: 0 }); };
   const shows = (t: MobileTab) => !isMobile || mobileTab === t;
   const newTask = () => { setMenuOpen(false); setTaskSheet({ open: true, task: null }); };
@@ -46,10 +52,14 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
   const projectsById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
   const people = useMemo(() => {
     const s = new Set<string>();
-    tasks.forEach((t) => t.assignee && s.add(t.assignee));
-    projects.forEach((p) => p.owner && s.add(p.owner));
+    // Team members first-class, plus any other names already used on the board.
+    const seen = new Set<string>();
+    for (const n of [...team, ...tasks.map((t) => t.assignee), ...projects.map((p) => p.owner)]) {
+      const k = n?.trim().toLowerCase();
+      if (k && !seen.has(k)) { seen.add(k); s.add(n.trim()); }
+    }
     return [...s].sort((a, b) => a.localeCompare(b));
-  }, [tasks, projects]);
+  }, [tasks, projects, team]);
 
   useEffect(() => { if (assignee && !people.includes(assignee)) setAssignee(""); }, [people, assignee]);
   useEffect(() => { if (selected && selected !== NO_PROJECT && !projectsById.has(selected)) setSelected(""); }, [projectsById, selected]);
@@ -77,6 +87,11 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
       board.applyTask(t);
       notify((e as Error).message);
     }
+  };
+
+  const openTaskById = (id: string) => {
+    const t = tasks.find((x) => x.id === id);
+    if (t) setTaskSheet({ open: true, task: t }); else notify("That task was deleted.");
   };
 
   const selectProject = (id: string) => {
@@ -107,7 +122,8 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
             <button className="capsule tint" type="button" onClick={newTask} aria-label="New task">
               <Icon name="plus" width={2.2} /><span className="label-txt">New Task</span>
             </button>
-            <AccountMenu user={user} onPassword={() => setPasswordOpen(true)} onTeam={() => setTeamOpen(true)} onSignOut={onSignOut} />
+            <NotificationBell unread={board.unread} isMobile={isMobile} state={notes} onOpenTask={openTaskById} />
+            <AccountMenu user={user} onSettings={() => setSettingsOpen(true)} onTeam={() => setTeamOpen(true)} onSignOut={onSignOut} />
           </div>
         </header>
 
@@ -188,8 +204,13 @@ export default function App({ user, onSignOut }: { user: User; onSignOut: () => 
         people={people} assignee={assignee} onAssignee={setAssignee} prio={prio} onPrio={setPrio}
         connection={connection} onNewTask={newTask} onNewProject={newProject}
         user={user} onSignOut={() => { setMenuOpen(false); onSignOut(); }}
-        onPassword={() => { setMenuOpen(false); setPasswordOpen(true); }}
+        onSettings={() => { setMenuOpen(false); setSettingsOpen(true); }}
         onTeam={() => { setMenuOpen(false); setTeamOpen(true); }} />
+      <SettingsSheet open={settingsOpen} user={user} onClose={() => setSettingsOpen(false)} notify={notify}
+        onUserChange={(u) => { onUserChange(u); board.reload(); }}
+        onPassword={() => { setSettingsOpen(false); setPasswordOpen(true); }}
+        onTeam={() => { setSettingsOpen(false); setTeamOpen(true); }}
+        onSignOut={() => { setSettingsOpen(false); onSignOut(); }} />
       <PasswordSheet open={passwordOpen} onClose={() => setPasswordOpen(false)} onDone={() => { setPasswordOpen(false); notify("Password changed"); }} />
       {user.role === "admin" && <TeamSheet open={teamOpen} me={user} onClose={() => setTeamOpen(false)} />}
 

@@ -43,13 +43,13 @@ const VIEWS: { id: View; label: string; icon: IconName }[] = [
   { id: "timeline", label: "Timeline", icon: "timeline" },
 ];
 
-export function MenuSheet({ open, onClose, view, onView, people, assignee, onAssignee, prio, onPrio, connection, onNewTask, onNewProject, user, onSignOut, onPassword, onTeam }: {
+export function MenuSheet({ open, onClose, view, onView, people, assignee, onAssignee, prio, onPrio, connection, onNewTask, onNewProject, user, onSignOut, onSettings, onTeam }: {
   open: boolean; onClose: () => void;
   view: View; onView: (v: View) => void;
   people: string[]; assignee: string; onAssignee: (v: string) => void;
   prio: string; onPrio: (v: Priority | "") => void;
   connection: Connection; onNewTask: () => void; onNewProject: () => void;
-  user: User; onSignOut: () => void; onPassword: () => void; onTeam: () => void;
+  user: User; onSignOut: () => void; onSettings: () => void; onTeam: () => void;
 }) {
   const filtersOn = Boolean(assignee || prio);
   return (
@@ -94,7 +94,7 @@ export function MenuSheet({ open, onClose, view, onView, people, assignee, onAss
 
       <div className="form-group">
         {user.role === "admin" && <button type="button" className="mrow" onClick={onTeam}><span className="mico" style={{ background: "var(--green)" }}><Icon name="people" width={2} /></span>Team</button>}
-        <button type="button" className="mrow" onClick={onPassword}><span className="mico" style={{ background: "var(--label-3)" }}><Icon name="dots" width={2} /></span>Change Password</button>
+        <button type="button" className="mrow" onClick={onSettings}><span className="mico" style={{ background: "var(--label-3)" }}><Icon name="gear" width={2} /></span>Settings</button>
       </div>
       <div className="form-group">
         <button type="button" className="mrow danger" onClick={onSignOut}>Sign Out</button>

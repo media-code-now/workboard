@@ -4,7 +4,8 @@ import type { Project, Task } from "./types";
 
 export type Connection = "connecting" | "live" | "offline";
 
-const POLL_MS = 4000;
+const POLL_MS = 4000;        // while the tab is visible
+const HIDDEN_POLL_MS = 30000; // in the background: enough for notification alerts
 
 const upsert = <T extends { id: string }>(list: T[], item: T) =>
   list.some((x) => x.id === item.id) ? list.map((x) => (x.id === item.id ? item : x)) : [...list, item];
@@ -20,6 +21,7 @@ export function useBoard() {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [connection, setConnection] = useState<Connection>("connecting");
+  const [unread, setUnread] = useState(0);
   const rev = useRef<number | null>(null);
 
   const reload = useCallback(async () => {
@@ -43,19 +45,19 @@ export function useBoard() {
     let stopped = false;
     const tick = async () => {
       if (stopped) return;
-      if (document.visibilityState === "visible") {
-        try {
-          const { rev: latest } = await api.revision();
-          setConnection("live");
-          if (latest !== rev.current) await reload();
-        } catch {
-          setConnection("offline");
-        }
+      const visible = document.visibilityState === "visible";
+      try {
+        const r = await api.revision();
+        setConnection("live");
+        setUnread(r.unread);
+        if (visible && r.rev !== rev.current) await reload();
+      } catch {
+        setConnection("offline");
       }
-      if (!stopped) timer = window.setTimeout(tick, POLL_MS);
+      if (!stopped) timer = window.setTimeout(tick, visible ? POLL_MS : HIDDEN_POLL_MS);
     };
     const onVisible = () => { if (document.visibilityState === "visible") { clearTimeout(timer); tick(); } };
-    reload().then(() => { timer = window.setTimeout(tick, POLL_MS); });
+    reload().then(tick);
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onVisible);
     return () => {
@@ -75,5 +77,5 @@ export function useBoard() {
   const applyTask = useCallback((t: Task) => setTasks((l) => upsert(l, t)), []);
   const removeTask = useCallback((id: string) => setTasks((l) => l.filter((t) => t.id !== id)), []);
 
-  return { projects, tasks, loaded, loadError, connection, reload, applyProject, removeProject, applyTask, removeTask };
+  return { projects, tasks, loaded, loadError, connection, unread, setUnread, reload, applyProject, removeProject, applyTask, removeTask };
 }

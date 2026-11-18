@@ -45,6 +45,6 @@ export default function AuthGate() {
     case "signed-out":
       return <Login notice={state.notice} onSignedIn={(user) => setState({ status: "signed-in", user })} />;
     case "signed-in":
-      return <App user={state.user} onSignOut={signOut} />;
+      return <App user={state.user} onSignOut={signOut} onUserChange={(user) => setState({ status: "signed-in", user })} />;
   }
 }
