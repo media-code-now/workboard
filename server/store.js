@@ -69,7 +69,7 @@ const projectRow = (r) => r && ({
 const taskRow = (r) => r && ({
   id: r.id, title: r.title, projectId: r.project_id ?? "", assignee: r.assignee, status: r.status,
   priority: r.priority, due: r.due, notes: r.notes, completedAt: r.completed_at ?? null,
-  createdAt: r.created_at, updatedAt: r.updated_at,
+  createdAt: r.created_at, updatedAt: r.updated_at, createdBy: r.created_by ?? null,
 });
 
 /** @param {import("./sql.js").Sql} sql */
@@ -144,12 +144,12 @@ export function createStore(sql) {
 
     async listTasks() { return (await sql.query("SELECT * FROM tasks ORDER BY created_at")).map(taskRow); },
     async getTask(id) { return taskRow(await one("SELECT * FROM tasks WHERE id = $1", [id])); },
-    async createTask(input) {
+    async createTask(input, { createdBy = null } = {}) {
       const t = await cleanTask(input), now = Date.now();
       const row = await one(
-        `INSERT INTO tasks (id, title, project_id, assignee, status, priority, due, notes, completed_at, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10) RETURNING *`,
-        [randomUUID(), t.title, t.projectId, t.assignee, t.status, t.priority, t.due, t.notes, t.completedAt, now]);
+        `INSERT INTO tasks (id, title, project_id, assignee, status, priority, due, notes, completed_at, created_at, updated_at, created_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,$11) RETURNING *`,
+        [randomUUID(), t.title, t.projectId, t.assignee, t.status, t.priority, t.due, t.notes, t.completedAt, now, createdBy]);
       await bump();
       return taskRow(row);
     },

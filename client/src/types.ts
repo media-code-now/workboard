@@ -4,9 +4,9 @@ export type Health = "on-track" | "at-risk" | "off-track" | "done";
 export type Color = "blue" | "indigo" | "purple" | "pink" | "red" | "orange" | "yellow" | "green" | "teal";
 export interface User { id: string; email: string; name: string; role: "admin" | "member" }
 
-export interface NotificationPrefs { assigned: boolean; status: boolean; due: boolean }
-export interface Settings { name: string; email: string; role: User["role"]; prefs: NotificationPrefs }
-export interface AppNotification { id: string; type: "assigned" | "status" | "due"; taskId: string; title: string; body: string; createdAt: number; read: boolean }
+export interface NotificationPrefs { assigned: boolean; status: boolean; completed: boolean; due: boolean; leads: boolean; emailInstant: boolean; emailDigest: boolean; tz: string }
+export interface Settings { name: string; email: string; role: User["role"]; prefs: NotificationPrefs; emailConfigured: boolean }
+export interface AppNotification { id: string; type: "assigned" | "status" | "due" | "completed" | "lead" | "leaddue"; taskId: string; link: string; title: string; body: string; createdAt: number; read: boolean }
 
 export type View = "board" | "list" | "timeline";
 

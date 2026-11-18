@@ -5,7 +5,7 @@
 // the result back to a Response. Everything is imported lazily inside try/catch,
 // so startup problems come back as readable JSON errors and show in the log.
 
-const BUILD = "2026-11-18.2"; // bump to confirm which version Netlify is serving
+const BUILD = "2026-11-18.3"; // bump to confirm which version Netlify is serving
 
 export const config = { path: "/api/*" };
 

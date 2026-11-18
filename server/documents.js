@@ -25,6 +25,11 @@ function check(collection, id) {
 export function createDocuments(sql) {
   const bump = () => sql.query("UPDATE meta SET value = value + 1 WHERE key = 'rev'");
   return {
+    async get(collection, id) {
+      check(collection, id);
+      const [r] = await sql.query("SELECT data FROM documents WHERE collection = $1 AND id = $2", [collection, id]);
+      return r ? (typeof r.data === "string" ? JSON.parse(r.data) : r.data) : null;
+    },
     async list(collection) {
       check(collection);
       const rows = await sql.query("SELECT id, data FROM documents WHERE collection = $1 ORDER BY updated_at", [collection]);

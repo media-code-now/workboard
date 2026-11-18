@@ -88,10 +88,10 @@ test("due reminders: overdue, today, tomorrow; created once; respect the day sen
 
 test("preferences turn notification types off", async () => {
   const s = await call("ben", "GET", "/settings");
-  assert.deepEqual(s.body.prefs, { assigned: true, status: true, due: true });
+  assert.equal(s.body.prefs.assigned, true); assert.equal(s.body.prefs.due, true); assert.equal(s.body.prefs.emailDigest, true);
   assert.equal((await call("ben", "PATCH", "/settings", { prefs: { assigned: "yes" } })).status, 400);
   const off = await call("ben", "PATCH", "/settings", { prefs: { assigned: false } });
-  assert.deepEqual(off.body.prefs, { assigned: false, status: true, due: true });
+  assert.equal(off.body.prefs.assigned, false); assert.equal(off.body.prefs.status, true);
   const n0 = (await call("ben", "GET", "/notifications")).body.items.length;
   await call("ana", "POST", "/tasks", { title: "Quiet task", assignee: "Ben Cohen" });
   assert.equal((await call("ben", "GET", "/notifications")).body.items.length, n0);

@@ -8,6 +8,9 @@ const TYPE_ICON: Record<AppNotification["type"], { icon: IconName; color: string
   assigned: { icon: "people", color: "var(--blue)" },
   status: { icon: "arrow", color: "var(--indigo)" },
   due: { icon: "cal", color: "var(--orange)" },
+  completed: { icon: "check", color: "var(--green)" },
+  lead: { icon: "leads", color: "var(--teal)" },
+  leaddue: { icon: "leads", color: "var(--orange)" },
 };
 
 function timeAgo(ms: number) {
@@ -77,7 +80,7 @@ function List({ items, error, onOpen, onMarkAll, hasUnread }: {
         <div className="nt-empty">
           <div className="nt-empty-ico"><Icon name="bell" width={1.6} /></div>
           <b>You're all caught up</b>
-          <span>You'll see tasks assigned to you, changes to them, and due-date reminders here.</span>
+          <span>Tasks assigned to you, changes to them, finished work, lead follow-ups and due-date reminders show up here.</span>
         </div>
       )}
       {items && items.length > 0 && (
@@ -120,6 +123,7 @@ export function NotificationBell({ unread, isMobile, state, onOpenTask }: {
   const openItem = (n: AppNotification) => {
     if (!n.read) state.markRead({ ids: [n.id] });
     setOpen(false);
+    if (n.link) { location.href = n.link; return; }
     if (n.taskId) onOpenTask(n.taskId);
   };
   const list = <List items={state.items} error={state.error} hasUnread={unread > 0} onOpen={openItem} onMarkAll={() => state.markRead({ all: true })} />;

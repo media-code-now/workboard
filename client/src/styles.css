@@ -446,3 +446,6 @@ a.mrow { text-decoration: none; color: inherit; }
 .login-brand { width: 84px; height: 68px; margin: 0 auto 2px; }
 .login-by { margin: -12px 0 0; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--label-2); }
 @media (max-width: 640px) { .brand-ttl { gap: 10px; } .brand-ttl .brand-mark { width: 40px; height: 32px; } }
+.email-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.email-acts .capsule { font-size: 14px; height: 36px; }
+.warn-hint { background: color-mix(in srgb, var(--orange) 14%, transparent); color: var(--label); border-radius: 12px; padding: 9px 12px; margin: 0; }

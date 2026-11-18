@@ -6,6 +6,8 @@ import { ValidationError } from "./store.js";
 import { redactSecrets } from "./sql.js";
 import { createNotifications } from "./notifications.js";
 import { createDocuments } from "./documents.js";
+import { emailConfigured, layout, sendEmail } from "./email.js";
+import { runDigest } from "./digest.js";
 
 /**
  * @param store  projects/tasks from createStore()
@@ -87,14 +89,27 @@ export function createApp(store, auth, { staticDir, secureCookies = false, notif
 
   // ---- settings ----
   app.get("/api/settings", async (req, res) => {
-    res.json({ name: req.user.name, email: req.user.email, role: req.user.role, prefs: await notifications.getPrefs(req.user.id) });
+    res.json({ name: req.user.name, email: req.user.email, role: req.user.role, prefs: await notifications.getPrefs(req.user.id), emailConfigured: emailConfigured() });
   });
   app.patch("/api/settings", async (req, res) => {
     const { name, prefs } = req.body ?? {};
     let user = req.user;
     if (name !== undefined && name !== user.name) user = await auth.rename(user.id, name);
     const nextPrefs = prefs !== undefined ? await notifications.setPrefs(user.id, prefs) : await notifications.getPrefs(user.id);
-    res.json({ name: user.name, email: user.email, role: user.role, prefs: nextPrefs });
+    res.json({ name: user.name, email: user.email, role: user.role, prefs: nextPrefs, emailConfigured: emailConfigured() });
+  });
+  // Email checks from Settings: a test message, or today's summary right now.
+  app.post("/api/email/test", async (req, res) => {
+    const { html, text } = layout({ heading: "Email is working", intro: `Hi ${req.user.name}, this is a test from Workboard. You'll get emails like this when someone assigns you work, and a daily summary at 7am.` });
+    const r = await sendEmail({ to: req.user.email, subject: "Workboard test email", html, text });
+    if (!r.sent) return res.status(r.skipped ? 503 : 502).json({ error: r.skipped || `The email service said: ${r.error}` });
+    res.json({ sent: true, to: req.user.email });
+  });
+  app.post("/api/email/digest", async (req, res) => {
+    if (!emailConfigured()) return res.status(503).json({ error: "Email isn't set up on the server (RESEND_API_KEY and EMAIL_FROM)." });
+    const r = await runDigest(auth.sql, { force: true, onlyUserId: req.user.id });
+    if (!r.sent.length) return res.status(502).json({ error: "The summary couldn't be sent. Check the email settings in Netlify." });
+    res.json({ sent: true, to: req.user.email });
   });
   app.get("/api/team", async (_req, res) => res.json(await auth.listTeam()));
 
@@ -112,11 +127,20 @@ export function createApp(store, auth, { staticDir, secureCookies = false, notif
   // ---- Leads module documents (leads, proposals, config) ----
   app.get("/api/docs/:collection", async (req, res) => res.json(await documents.list(req.params.collection)));
   app.put("/api/docs/:collection/:id", async (req, res) => {
-    await documents.set(req.params.collection, req.params.id, req.body);
+    const { collection, id } = req.params;
+    const before = collection === "leads" ? await documents.get(collection, id) : null;
+    await documents.set(collection, id, req.body);
+    if (collection === "leads") {
+      try { await notifications.onLeadChange(req.user, id, before, req.body); }
+      catch (e) { console.error("Notification failed:", redactSecrets(e?.message || e)); }
+    }
     res.status(204).end();
   });
   app.delete("/api/docs/:collection/:id", async (req, res) => {
-    return (await documents.remove(req.params.collection, req.params.id)) ? res.status(204).end() : res.status(404).json({ error: "Not found" });
+    const { collection, id } = req.params;
+    if (!(await documents.remove(collection, id))) return res.status(404).json({ error: "Not found" });
+    if (collection === "leads") await notifications.onLeadDelete(id).catch(() => {});
+    res.status(204).end();
   });
 
   // ---- team (admins only) ----
@@ -174,7 +198,7 @@ export function createApp(store, auth, { staticDir, secureCookies = false, notif
     } catch (e) { console.error("Notification failed:", redactSecrets(e?.message || e)); }
   };
   app.post("/api/tasks", async (req, res) => {
-    const task = await store.createTask(req.body ?? {});
+    const task = await store.createTask(req.body ?? {}, { createdBy: req.user.id });
     await notifyChange(req.user, null, task);
     res.status(201).json(task);
   });
@@ -186,7 +210,9 @@ export function createApp(store, auth, { staticDir, secureCookies = false, notif
     res.json(task);
   });
   app.delete("/api/tasks/:id", async (req, res) => {
-    return (await store.deleteTask(req.params.id)) ? res.status(204).end() : res.status(404).json({ error: "Task not found" });
+    if (!(await store.deleteTask(req.params.id))) return res.status(404).json({ error: "Task not found" });
+    await notifications.onTaskDelete(req.params.id).catch(() => {});
+    res.status(204).end();
   });
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));

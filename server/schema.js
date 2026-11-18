@@ -6,7 +6,7 @@ import { AUTH_SCHEMA } from "./auth.js";
 import { NOTIFY_SCHEMA } from "./notifications.js";
 import { DOC_SCHEMA } from "./documents.js";
 
-export const SCHEMA_VERSION = 3; // 2: notifications + user preferences; 3: documents (Leads)
+export const SCHEMA_VERSION = 4; // 2: notifications + prefs; 3: documents (Leads); 4: notification links, task creator, digest log
 
 export async function applySchema(sql) {
   for (const stmt of [...SCHEMA, ...AUTH_SCHEMA, ...NOTIFY_SCHEMA, ...DOC_SCHEMA]) await sql.query(stmt);

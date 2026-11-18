@@ -140,9 +140,31 @@ People are matched to tasks by **name**: a task notifies the account whose name 
 
 - **Assigned to me**: someone else sets you as a task's assignee.
 - **Changes to my tasks**: someone else moves a task you're assigned to another column.
-- **Due-date reminders**: created for your open tasks due tomorrow, today, or overdue, once each.
+- **Finished work**: someone else completes a task you created.
+- **Due-date reminders**: for your open tasks due tomorrow, today, or overdue, once each. They're withdrawn if the date changes or the task is done.
+- **Leads**: a Lead Desk lead is assigned to you (as owner), and your lead follow-ups are due. These open Lead Desk.
 
 You never get notified about your own changes. Each person turns types on or off in Settings, and read notifications are kept for 60 days. Desktop alerts are per device and need the browser's permission.
+
+## Email
+
+Workboard emails people through [Resend](https://resend.com) (free for 3,000 emails a month):
+
+- **Right away**, for things other people do: you're assigned a task or a lead, someone moves a task you're assigned, or someone completes a task you created.
+- **Daily summary at 7am** in each person's time zone (taken from their browser): overdue tasks, tasks due today and tomorrow, lead follow-ups due, and unread count. Skipped when there's nothing to say. Sent by the scheduled function `netlify/functions/daily-digest.mjs`, which runs hourly.
+
+Each person turns either off in Settings → Email, where there are also "Send test email" and "Send today's summary now" buttons.
+
+Setup:
+
+1. Create a Resend account and add your domain under **Domains** (for example `aiagentssee.com`). Add the DNS records it shows and wait until it says Verified.
+2. Create an API key under **API Keys** (sending access is enough).
+3. In Netlify → Project configuration → Environment variables, add:
+   - `RESEND_API_KEY`: the key (mark it secret)
+   - `EMAIL_FROM`: the sender, on the verified domain, e.g. `Workboard <workboard@aiagentssee.com>`
+4. Trigger a deploy, then use **Send test email** in Settings.
+
+Without these variables nothing is emailed and everything else works as before.
 
 ## How syncing works
 
@@ -161,7 +183,8 @@ All endpoints are JSON under `/api`. Everything except `/auth/login` and `/healt
 | GET | `/revision?today=YYYY-MM-DD` | Change counter for syncing, plus your unread count |
 | GET | `/notifications?today=YYYY-MM-DD` | Your latest notifications (creates due reminders) |
 | POST | `/notifications/read` | Mark `{ ids: [...] }` or `{ all: true }` as read |
-| GET / PATCH | `/settings` | Your name and notification preferences |
+| GET / PATCH | `/settings` | Your name, notification and email preferences, time zone |
+| POST | `/email/test`, `/email/digest` | Send yourself a test email / today's summary now |
 | GET | `/team` | Everyone's name (for assignee suggestions) |
 | GET | `/docs/:collection` | Leads module: list `leads`, `proposals` or `config` |
 | PUT / DELETE | `/docs/:collection/:id` | Leads module: save (whole record) / delete |

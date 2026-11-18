@@ -15,10 +15,13 @@ function Toggle({ id, label, hint, checked, disabled, onChange }: {
   );
 }
 
-const PREF_ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[] = [
+type BoolPref = Exclude<keyof NotificationPrefs, "tz">;
+const PREF_ROWS: { key: BoolPref; label: string; hint: string }[] = [
   { key: "assigned", label: "Assigned to me", hint: "When someone gives you a task" },
   { key: "status", label: "Changes to my tasks", hint: "When someone moves a task you're assigned" },
+  { key: "completed", label: "Finished work", hint: "When someone completes a task you created" },
   { key: "due", label: "Due-date reminders", hint: "The day before, on the day, and when overdue" },
+  { key: "leads", label: "Leads", hint: "A lead assigned to you, and your follow-ups in Lead Desk" },
 ];
 
 export function SettingsSheet({ open, user, onClose, onUserChange, onPassword, onTeam, onSignOut, notify }: {
@@ -54,7 +57,16 @@ export function SettingsSheet({ open, user, onClose, onUserChange, onPassword, o
     finally { setBusy(false); }
   };
 
-  const setPref = async (key: keyof NotificationPrefs, value: boolean) => {
+  const [emailBusy, setEmailBusy] = useState<"" | "test" | "digest">("");
+  const sendCheck = async (kind: "test" | "digest") => {
+    setEmailBusy(kind); setError(null);
+    try {
+      const r = kind === "test" ? await api.emailTest() : await api.emailDigest();
+      notify(kind === "test" ? `Test email sent to ${r.to}` : `Today's summary sent to ${r.to}`);
+    } catch (e) { setError((e as Error).message); }
+    finally { setEmailBusy(""); }
+  };
+  const setPref = async (key: BoolPref, value: boolean) => {
     if (!settings) return;
     setSettings({ ...settings, prefs: { ...settings.prefs, [key]: value } }); // optimistic
     try { setSettings(await api.updateSettings({ prefs: { [key]: value } })); }
@@ -106,6 +118,24 @@ export function SettingsSheet({ open, user, onClose, onUserChange, onPassword, o
               : "Pop-up alerts on this device when Workboard isn't in front"}
             onChange={toggleAlerts} />
         </div>
+      </div>
+
+      <div className="menu-sec">
+        <div className="menu-h">Email</div>
+        {settings && !settings.emailConfigured && (
+          <p className="hint warn-hint">Email isn't connected yet, so nothing is sent. An admin adds the email service in Netlify (see the README, "Email").</p>
+        )}
+        <div className="form-group">
+          <Toggle id="pref-emailInstant" label="Email me right away" hint="For the notifications above that someone else causes"
+            checked={settings?.prefs.emailInstant ?? true} disabled={!settings} onChange={(v) => setPref("emailInstant", v)} />
+          <Toggle id="pref-emailDigest" label="Daily summary at 7am" hint={`Overdue and upcoming tasks, lead follow-ups${settings?.prefs.tz ? ` · ${settings.prefs.tz.replace(/_/g, " ")} time` : ""}`}
+            checked={settings?.prefs.emailDigest ?? true} disabled={!settings} onChange={(v) => setPref("emailDigest", v)} />
+        </div>
+        <div className="email-acts">
+          <button type="button" className="capsule glass" disabled={!settings?.emailConfigured || !!emailBusy} onClick={() => sendCheck("test")}>{emailBusy === "test" ? "Sending…" : "Send test email"}</button>
+          <button type="button" className="capsule glass" disabled={!settings?.emailConfigured || !!emailBusy} onClick={() => sendCheck("digest")}>{emailBusy === "digest" ? "Sending…" : "Send today's summary now"}</button>
+        </div>
+        <p className="hint">Emails go to {user.email}.</p>
       </div>
 
       <div className="menu-sec">

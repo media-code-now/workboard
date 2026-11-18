@@ -41,6 +41,12 @@ export default function App({ user, onSignOut, onUserChange }: { user: User; onS
   const [team, setTeam] = useState<string[]>([]);
   const notes = useNotifications(board.unread, board.setUnread);
   useEffect(() => { api.team().then((t) => setTeam(t.map((u) => u.name))).catch(() => {}); }, [user.name, teamOpen]);
+  // Keep the person's time zone current, so reminders and the 7am summary use their local day.
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz) return;
+    api.settings().then((s) => { if (s.prefs.tz !== tz) api.updateSettings({ prefs: { tz } }).catch(() => {}); }).catch(() => {});
+  }, [user.id]);
   const goTab = (t: MobileTab) => { setMenuOpen(false); setMobileTab(t); window.scrollTo({ top: 0 }); };
   const shows = (t: MobileTab) => !isMobile || mobileTab === t;
   const newTask = () => { setMenuOpen(false); setTaskSheet({ open: true, task: null }); };
